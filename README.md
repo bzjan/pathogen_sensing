@@ -5,3 +5,61 @@ This repository contains the code for pathogen sensing with biphase emulsion dro
 <img src="https://github.com/bzjan/pathogen_sensing/assets/5402654/6097459d-43b7-4d79-83db-cbbb201d32f7" width="400">
 
 
+### 1. System Requirements
+#### Hardware
+* OS: Windows 11 10.0.22631
+* Processor: Intel i7-13700F
+* RAM: 64 GB
+* Storage: ~ 1 GB
+
+#### Software
+* [Mathematica](https://www.wolfram.com/mathematica/) (or free [Wolfram Engine](https://www.wolfram.com/engine/)) 13.3
+* [Matlab](https://www.mathworks.com/products/new_products/latest_features.html) 2023b
+* gcc 13.2.0 via [msys2](https://www.msys2.org/)
+* [Visual Studio Code](https://code.visualstudio.com/download) 1.87
+* [CMake Tools extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) 1.17.17
+
+### 2. Installation guide
+#### Get this repository with e.g.
+```
+git clone https://github.com/bzjan/pathogen_sensing.git
+```
+
+#### Install the C++ simulator:
+* The following instructions will take about 5min.
+* For a free C++ compiler, download and install msys2 from: https://www.msys2.org/
+* Open msys terminal via: `windows key > msys` and enter:
+```
+# update packages
+pacman -Syu
+```
+After installation agree to close the msys terminal and start a new one via: `windows key > msys` and enter:
+```
+# update packages
+pacman -Su
+
+# gcc, make, cmake, boost, mpi, gdb, eigen
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-boost mingw-w64-x86_64-msmpi mingw-w64-x86_64-gdb  mingw-w64-x86_64-python-pygments mingw-w64-x86_64-eigen3
+```
+* In Visual Studio Code install and use the CMake Tools extension to automatically detect the installation files, build the simulator executable (takes about 5s) and run unit tests.
+* The compiled executable must be placed in a subfolder `build` in the folder where the Mathematica files reside for Mathematica to be able to call the executable.
+
+### 3. Demo
+* To test the C++ simulation code, we included unit tests. They can be executed with the CMake Tools extension in Visual Studio Code. When run, all unit tests pass successfully.
+* To test the simulation, you need to have built the simulator executable. Afterwards open `Mathematica/run_simulations.wl` in Mathematica and go to subsubsection `3d position with 3d orientation vector/tests/single simulation: C++ simulation call and output`. To initialize the required functions use the `Run package` button in the top left corner. Execute the code block with `Shift+Enter` to start the simulation. It should take about 10s.
+The output will be available in Mathematica for visualization and analysis.
+
+### 4. Instructions for use
+The repository contains files for 
+* analyzing experimental data
+  * Mathematica/droplet_tracker.wl (extract droplet motion and light intensities over time)
+  * Mathematica/droplet_optics.wl (Simulate light transmission through droplets using Jones transfer matrices)
+  * Matlab/frictionCalibrationForTrackedDroplets.m (measure effective droplet friction coefficient)
+  * Matlab/main.m (Propagation of electromagnetic waves beyond the droplet)
+  * Matlab/trackMovieMaker.m (Measuring droplet tilt over time)
+* orchestrating and analyzing simulations
+  * Mathematica/run_simulations.wl (define parameters for simulation scans, analyze and visualize results)
+* creating the manuscript figures
+  * Mathematica/figures.wl
+
+To recreate the manuscript figures you need to open figures.wl in Mathematica. Adapt the paths in subsection `Constants/parametersPaths: paths` and execute the notebook with the button `Run package`. Creating the figures will take about 10min.
