@@ -35,7 +35,7 @@ fudgeFactor=1.0;
 (*physics*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*nice table of physical parameters*)
 
 
@@ -593,6 +593,7 @@ fudgeFactor=1.0;
 (*{u0Dim,diffRot,rDropletDim,swimFactor}={20.0*^-6,3.5,3.5*^-6,2.0};*)
 (*{diffS,timeFactor,asymmetry}={115,0.186,16.0}; *)
 (*{tfinalSim,nParallelSystems,noiseSeed}={200,200,0};*)
+(*tTransient=Max[1,Round[0.2tfinalSim]];*)
 (**)
 (*(** test: starving / less active: more running **)*)
 (*{u0Dim,diffRot,rDropletDim,swimFactor}={10.0*^-6,3.5,3.5*^-6,2.0};*)
@@ -603,7 +604,7 @@ fudgeFactor=1.0;
 (*runSimulation[{u0Dim,diffRot,diffS,timeFactor,rDropletDim,asymmetry,swimFactor,tfinalSim,nParallelSystems,noiseSeed}];*)
 (**)
 (*(** read simulation output **)*)
-(*{nStepsFine,dtFine,timesFine,fineTrajectories}=readSimulationOutput[tfinalSim];*)
+(*{nStepsFine,dtFine,timesFine,fineTrajectories,stepsTransient}=readSimulationOutput[tfinalSim,tTransient];*)
 (*(*{nSteps,dt,times,trajectories}={nStepsFine/10,10dtFine,timesFine\[LeftDoubleBracket];;;;10\[RightDoubleBracket],fineTrajectories\[LeftDoubleBracket]All,;;;;10\[RightDoubleBracket]};*)*)
 (*{nSteps,dt,times,trajectories}={nStepsFine,dtFine,timesFine[[;;;;1]],fineTrajectories[[All,;;;;1]]};*)
 (**)
@@ -828,7 +829,7 @@ fudgeFactor=1.0;
 (*Histogram[thetaDatas[[14,stepsTransient;;]],{0,\[Pi]/2,\[Pi]/(2 50)}]*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*scan: single simulation*)
 
 
@@ -868,7 +869,7 @@ fudgeFactor=1.0;
 (*{nSteps,dt,times,trajectories,stepsTransient}=readSimulationOutput[tfinalSim,tTransient];*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*analyze trajectories / spectra*)
 
 
@@ -877,9 +878,8 @@ fudgeFactor=1.0;
 (*{rtRatios,meanResidenceTimes,meanTransitionRates}=calcStateStatistics[trajectories,nSteps,dt];*)
 (**)
 (*(** calculate mean power spectral densities, fit and width **)*)
-(*nameLookupMap="RGB";*)
-(*(*nameLookupMap="prop_true_compiled_test_dropletTilt_thetaPhi_analyticDirector_wvl_550_DnLC_0.18\\zDistance_0.0";*)*)
-(*updateIntensityLookupMap[nameLookupMap];*)
+(*pathLookupMap=FileNameJoin[{NotebookDirectory[],"..","Data","numerical_droplet_optics","lookup_map"}];*)
+(*thetaPhiIntensityInterpolation=updateIntensityLookupMap[pathLookupMap];*)
 (*Print[AbsoluteTiming[*)
 (*{freqs,mPSDs,mPSD\[Theta],mPSDi,stdPSD\[Theta],stdPSDi,sData,thetaData,phiData,iData,phasesS,phases\[Theta],phasesI,*)
 (*meanThetas,meanMeanTheta,thetaNoise,mThetaNoiseMean,mThetaNoiseC,meanIminmax,histoTheta}=calcMeanPowerSpectra[trajectories,dt,gravFactor,plotNoiseQ,stepsTransient];*)
@@ -1061,7 +1061,7 @@ fudgeFactor=1.0;
 (*][[1]],"\[ThinSpace]s"];*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*scan: swim speeds, run/tumble rates*)
 
 

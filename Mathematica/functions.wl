@@ -472,12 +472,8 @@ fSwim[p_]:=swimFactor dragTransDim u0Dim p;
 freqOnlyRunning[u0Dim_]:=swimFactor dragTransDim u0Dim/(2\[Pi] (rDropletDim+rEcoliDim));
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*maxTheta*)
-
-
-(* ::Text:: *)
-(*source: Jan presentation*)
 
 
 Clear[maxTheta];
@@ -877,11 +873,11 @@ Print[iFitTheory["BestFitParameters"]];
 (*-> later: multiply space by rDropletDim to get out right values*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*code*)
 
 
-calcForceFactors[rDropletDim_,u0Dim_,swimMultiplier_:1.0]:=Module[{muDim,rEcoliDim,dragFactorT,gDim,vr,\[Rho]FDim,\[Rho]HDim,rEcoli,g,rDroplet,u0,mu,\[Rho]F,\[Rho]H,m,d,rcom,mDim,dDim,rcomDim,rRatio,swimFactor,gravFactor},
+calcForceFactors[rDropletDim_,u0Dim_,swimMultiplier_:1.0]:=Module[{muDim,rEcoliDim,dragFactorT,gDim,vr,\[Rho]FDim,\[Rho]HDim,rEcoli,g,rDroplet,u0,mu,\[Rho]F,\[Rho]H,m,d,rcom,(*mDim,*)dDim,(*rcomDim,*)rRatio,swimFactor,gravFactor},
   muDim = 8.9*^-4;
   rEcoliDim = 0.5*^-6;
   gDim=9.81;
@@ -896,6 +892,12 @@ calcForceFactors[rDropletDim_,u0Dim_,swimMultiplier_:1.0]:=Module[{muDim,rEcoliD
   d=calcd[rDroplet,20rDroplet,vr];
   rcom=calczcom[rDroplet,20rDroplet,d,\[Rho]F,\[Rho]H,m];
   rRatio=rcom/(rDroplet+rEcoli);
+  
+  (** TODO: move through correct channels **)
+  mDim=m;
+  rcomDim=rcom rDropletDim;
+  rEcoliShort=rEcoli;
+  
   {swimFactor,gravFactor}={swimMultiplier dragFactorT u0, m g rRatio}
 ]
 
@@ -1577,11 +1579,11 @@ StyleBox[\"\[RightAngleBracket]\",\nFontSlant->\"Italic\"], \(fit\)]\) (\[Degree
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*doPlots*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*code*)
 
 
@@ -1592,20 +1594,29 @@ mPSD\[Theta]_,mPSDi_,stdPSD\[Theta]_,stdPSDi_,meanThetas_,rEcoli_,pthout_,observ
 descriptions,numericalStrings0,numericalStrings,plotData,tMax,plotTrajectory,meanThetasPlot,debugQ,thetaDataWrapped,phiDataWrapped,plotPiecesQ,histoThetaIComparisonPlot},
 
 \[Theta]MaxDeg=(180.0/\[Pi] maxTheta[u0Dim,fudgeFactor]);
-histoThetaIComparisonPlot=Show[
-	ListLinePlot[{Subdivide[0.0,180,Length[#]-1],#/Max[#]}\[Transpose]&@histoTheta,InterpolationOrder->0
-	,AspectRatio->1,ImageSize->{Automatic,400}
-	,Frame->True,FrameStyle->Directive[Black,22,AbsoluteThickness[2]],FrameLabel->{"polar angle \!\(\*
-StyleBox[\"\[Theta]\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\" \",\nFontSlant->\"Italic\"]\)(\[Degree])","occurrence"}
-	,Filling->Bottom,PlotRangePadding->{{0,0},{0,Scaled[0.05]}},PlotRange->All
-	,If[Im[\[Theta]MaxDeg]==0,Epilog->{Red,Dashed,InfiniteLine[{{#,0},{#,1}}]&@\[Theta]MaxDeg},Sequence@@{}]],
-	Plot[thetaPhiIntensityInterpolation[-Abs[\[Pi]/180\[Theta]-\[Pi]/2.0]+\[Pi]/2.0,0],{\[Theta],0,180},PlotRange->All,PlotStyle->ColorData[97,2]]
-];
-Export[FileNameJoin[{pthout,"histoThetaIComparison"<>parameterString<>".png"}],histoThetaIComparisonPlot];
 
-meanThetasPlot=Histogram[meanThetas,{0,\[Pi],0.05},PlotRange->{{0,\[Pi]},All},AspectRatio->1,ImageSize->{Automatic,400},Frame->True,FrameLabel->{"mean angle \[LeftAngleBracket]\[Theta]\[RightAngleBracket]","occurrence"}];
-Export[FileNameJoin[{pthout,"meanThetas"<>parameterString<>".png"}],meanThetasPlot];
+(** debug **)
+plotThetaIComparisonQ=False;
+If[plotThetaIComparisonQ,
+	histoThetaIComparisonPlot=Show[
+		ListLinePlot[{Subdivide[0.0,180,Length[#]-1],#/Max[#]}\[Transpose]&@histoTheta,InterpolationOrder->0
+		,AspectRatio->1,ImageSize->{Automatic,400}
+		,Frame->True,FrameStyle->Directive[Black,22,AbsoluteThickness[2]],FrameLabel->{"polar angle \!\(\*
+	StyleBox[\"\[Theta]\",\nFontSlant->\"Italic\"]\)\!\(\*
+	StyleBox[\" \",\nFontSlant->\"Italic\"]\)(\[Degree])","occurrence"}
+		,Filling->Bottom,PlotRangePadding->{{0,0},{0,Scaled[0.05]}},PlotRange->All
+		,If[Im[\[Theta]MaxDeg]==0,Epilog->{Red,Dashed,InfiniteLine[{{#,0},{#,1}}]&@\[Theta]MaxDeg},Sequence@@{}]],
+		Plot[thetaPhiIntensityInterpolation[-Abs[\[Pi]/180\[Theta]-\[Pi]/2.0]+\[Pi]/2.0,0],{\[Theta],0,180},PlotRange->All,PlotStyle->ColorData[97,2]]
+	];
+	Export[FileNameJoin[{pthout,"histoThetaIComparison"<>parameterString<>".png"}],histoThetaIComparisonPlot];
+];
+
+(** debug **)
+plotMeanThetasQ=False;
+If[plotMeanThetasQ,
+	meanThetasPlot=Histogram[meanThetas,{0,\[Pi],0.05},PlotRange->{{0,\[Pi]},All},AspectRatio->1,ImageSize->{Automatic,400},Frame->True,FrameLabel->{"mean angle \[LeftAngleBracket]\[Theta]\[RightAngleBracket]","occurrence"}];
+	Export[FileNameJoin[{pthout,"meanThetas"<>parameterString<>".png"}],meanThetasPlot];
+];
 
 sData=trajectory[[All,7]];
 thetaData=ArcCos/@trajectory[[All,3]];
