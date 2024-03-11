@@ -57,8 +57,8 @@ The output will be available in Mathematica for visualization and analysis, whic
       * Modify variables thetavals and phivals (located on lines 16 and 17 respectively) to both be 0
       * Set showImagesLiveQ (line 33) to true, and ensure that other program options (lines 32, 34-38) are set to false
       * This dataset contains a single electromagnetic field generated from Jones calculus for an upright droplet (theta = 0, phi = 0)
-   * trackDroplets.m: Supplementary Video 4
-   * frictionCalibrationForTrackedDroplets.m: Dataset extracted by trackDroplets.m
+   * trackDroplets.m: Load Supplementary Video 4 to extract droplet tilts
+   * frictionCalibrationForTrackedDroplets.m: Use dataset extracted by trackDroplets.m to obtain friction coefficient
 
 ### 4. Instructions for use
 The repository contains files for 
@@ -73,4 +73,4 @@ The repository contains files for
 * creating the manuscript figures
   * Mathematica/figures.wl
 
-To recreate the manuscript figures you need to open figures.wl in Mathematica. Adapt the paths in subsection `Constants/parametersPaths: paths` and execute the notebook with the button `Run package`. Creating the figures will take about 10min.
+To recreate the manuscript figures you need to open figures.wl in Mathematica. Adapt the paths in subsection `Constants/parametersPaths: paths` and execute the notebook with the button `Run package`. Creating the figures will take about 10 minutes.
