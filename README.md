@@ -53,7 +53,9 @@ The output will be available in Mathematica for visualization and analysis, whic
    * trackDroplets.m: Approximately 10 minutes to process 9000 frames containing about 30 droplets,
    * frictionCalibrationForTrackedDroplets.m: Approximately 50s to process 22 droplets
 * Datasets to demo MATLAB code:
-   * dropletLightProp.m: test_dropletTilt_thetaPhi_analyticDirector_wvl_550_DnLC_0.18 contained in sets A through E
+   * dropletLightProp.m: test_dropletTilt_thetaPhi_analyticDirector_wvl_550_DnLC_0.18
+      * Modify variables thetavals and phivals (located on lines 16 and 17 respectively) to both be 0
+      * This dataset contains a single E-field generated from Jones calculus for an upright droplet (theta = 0, phi = 0)
    * trackDroplets.m: Supplementary Video 4
    * frictionCalibrationForTrackedDroplets.m: Dataset extracted by trackDroplets.m
 
