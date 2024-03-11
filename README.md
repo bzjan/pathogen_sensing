@@ -26,7 +26,7 @@ git clone https://github.com/bzjan/pathogen_sensing.git
 ```
 
 #### Install the C++ simulator:
-* The following instructions will take about 5min.
+The following instructions will take about 5 minutes:
 * For a free C++ compiler, download and install msys2 from: https://www.msys2.org/
 * Open msys terminal via: `windows key > msys` and enter:
 ```
@@ -49,14 +49,14 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-cmake ming
 * To test the simulation, you need to have built the simulator executable. Afterwards open `Mathematica/run_simulations.wl` in Mathematica and go to subsection `3d position with 3d orientation vector/scan: single simulation`. To initialize the required functions use the `Run package` button in the top left corner. Execute the code block with `Shift+Enter` to start the simulation. It should take about 10s.
 The output will be available in Mathematica for visualization and analysis, which can be done in the following block (10s). The resulting plot will be located in output/test
 * Expected run times for MATLAB code:
-   * dropletLightProp.m: Approximatiely 1-2s (with program options set to false)
+   * dropletLightProp.m: Approximately 1-2s (with program options set to false)
    * trackDroplets.m: Approximately 10 minutes to process 9000 frames containing about 30 droplets,
    * frictionCalibrationForTrackedDroplets.m: Approximately 50s to process 22 droplets
 * Datasets to demo MATLAB code:
-   * dropletLightProp.m: test_dropletTilt_thetaPhi_analyticDirector_wvl_550_DnLC_0.18
+   * dropletLightProp.m: test_dropletTilt_thetaPhi_analyticDirector_wvl_550_DnLC_0.18, located within Data folder
       * Modify variables thetavals and phivals (located on lines 16 and 17 respectively) to both be 0
       * Set showImagesLiveQ (line 33) to true, and ensure that other program options (lines 32, 34-38) are set to false
-      * This dataset contains a single E-field generated from Jones calculus for an upright droplet (theta = 0, phi = 0)
+      * This dataset contains a single electromagnetic field generated from Jones calculus for an upright droplet (theta = 0, phi = 0)
    * trackDroplets.m: Supplementary Video 4
    * frictionCalibrationForTrackedDroplets.m: Dataset extracted by trackDroplets.m
 
