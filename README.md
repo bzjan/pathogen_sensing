@@ -48,6 +48,14 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-cmake ming
 * To test the C++ simulation code, we included unit tests. They can be executed with the CMake Tools extension in Visual Studio Code. When run, all unit tests pass successfully.
 * To test the simulation, you need to have built the simulator executable. Afterwards open `Mathematica/run_simulations.wl` in Mathematica and go to subsection `3d position with 3d orientation vector/scan: single simulation`. To initialize the required functions use the `Run package` button in the top left corner. Execute the code block with `Shift+Enter` to start the simulation. It should take about 10s.
 The output will be available in Mathematica for visualization and analysis, which can be done in the following block (10s). The resulting plot will be located in output/test
+* Expected run times for MATLAB code:
+   * dropletLightProp.m: Approximatiely 1-2s (with program options set to false)
+   * trackDroplets.m: Approximately 10 minutes to process 9000 frames containing about 30 droplets,
+   * frictionCalibrationForTrackedDroplets.m: Approximately 50s to process 22 droplets
+* Datasets to demo MATLAB code:
+   * dropletLightProp.m: test_dropletTilt_thetaPhi_analyticDirector_wvl_550_DnLC_0.18 contained in sets A through E
+   * trackDroplets.m: Supplementary Video 4
+   * frictionCalibrationForTrackedDroplets.m: Dataset extracted by trackDroplets.m
 
 ### 4. Instructions for use
 The repository contains files for 
