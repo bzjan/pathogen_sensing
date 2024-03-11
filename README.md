@@ -55,6 +55,7 @@ The output will be available in Mathematica for visualization and analysis, whic
 * Datasets to demo MATLAB code:
    * dropletLightProp.m: test_dropletTilt_thetaPhi_analyticDirector_wvl_550_DnLC_0.18
       * Modify variables thetavals and phivals (located on lines 16 and 17 respectively) to both be 0
+      * Set showImagesLiveQ (line 33) to true, and ensure that other program options (lines 32, 34-38) are set to false
       * This dataset contains a single E-field generated from Jones calculus for an upright droplet (theta = 0, phi = 0)
    * trackDroplets.m: Supplementary Video 4
    * frictionCalibrationForTrackedDroplets.m: Dataset extracted by trackDroplets.m
