@@ -64,7 +64,7 @@ The output will be available in Mathematica for visualization and analysis, whic
 The repository contains files for 
 * analyzing experimental data
   * Mathematica/droplet_tracker.wl (extract droplet motion and light intensities over time)
-  * Mathematica/droplet_optics.wl (Simulate light transmission through droplets using Jones transfer matrices)
+  * Mathematica/droplet_optics.wl (Computer liquid crystal arrangement and simulate light transmission through droplets using Jones calculus)
   * Matlab/frictionCalibrationForTrackedDroplets.m (measure effective droplet friction coefficient)
   * Matlab/dropletLightProp.m (Propagation of electromagnetic waves beyond the droplet)
   * Matlab/trackDroplets.m (Measuring droplet tilt over time)
