@@ -66,8 +66,8 @@ The repository contains files for
   * Mathematica/droplet_tracker.wl (extract droplet motion and light intensities over time)
   * Mathematica/droplet_optics.wl (Simulate light transmission through droplets using Jones transfer matrices)
   * Matlab/frictionCalibrationForTrackedDroplets.m (measure effective droplet friction coefficient)
-  * Matlab/main.m (Propagation of electromagnetic waves beyond the droplet)
-  * Matlab/trackMovieMaker.m (Measuring droplet tilt over time)
+  * Matlab/dropletLightProp.m (Propagation of electromagnetic waves beyond the droplet)
+  * Matlab/trackDroplets.m (Measuring droplet tilt over time)
 * orchestrating and analyzing simulations
   * Mathematica/run_simulations.wl (define parameters for simulation scans, analyze and visualize results)
 * creating the manuscript figures
