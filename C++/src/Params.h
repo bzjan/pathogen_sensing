@@ -33,6 +33,7 @@ class Params {
 		// attributes
 		double diffRot, diffS;							// 
 		double rDroplet, rForce;						// droplet radius, droplet radius + bacterium radius
+		double dragFudgeFactor;							// drag Fudge Factor
 		double swimFactor, gravFactor, lcFactor;
 		double dt;										// time step
 		double timeFactor, c;

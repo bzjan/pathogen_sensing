@@ -829,7 +829,7 @@ fudgeFactor=1.0;
 (*Histogram[thetaDatas[[14,stepsTransient;;]],{0,\[Pi]/2,\[Pi]/(2 50)}]*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*scan: single simulation*)
 
 
@@ -1079,7 +1079,7 @@ fudgeFactor=1.0;
 
 (* ::Input:: *)
 (*{debugPlotQ,plotNoiseQ,detailedForceAnalysisQ,showTransientQ}={False,False,False,False};*)
-(*outputName="production_fudge_friction_0.194_u0_1_14_pc";*)
+(*outputName="production_fudge_friction_0.53_u0_1_14_pc_meep";*)
 (*pathLookupMap=FileNameJoin[{NotebookDirectory[],"..","Data","numerical_droplet_optics","lookup_map"}];*)
 (*thetaPhiIntensityInterpolation=updateIntensityLookupMap[pathLookupMap];*)
 (**)
@@ -1107,9 +1107,9 @@ fudgeFactor=1.0;
 (*Print[{"\!\(\*SubscriptBox[\(r\), \(droplet\)]\) (\[Mu]m)","\!\(\*SubscriptBox[\(u\), \(0\)]\) (\[Mu]m/s)","\!\(\*SubscriptBox[\(t\), \(R\)]\) (s)","\!\(\*SubscriptBox[\(t\), \(T\)]\) (s)"}," = ",{10^6rDropletDim,DecimalForm[10^6u0Dim,{3,2}],1/rtRate,1/trRate}];*)
 (*calcPhysicalParameters[u0Dim,rDropletDim];*)
 (*{swimFactor,gravFactor}=calcForceFactors[rDropletDim,u0Dim,swimMultiplier];*)
-(**)
+(*fudgeFactor=0.53;*)
 (*(** run simulation **)*)
-(*args={u0Dim,diffRotDim,diffS,timeFactor,rDropletDim,asymmetry,swimMultiplier,tfinalSim,nParallelSystems,noiseSeed,hetQ,rtRate,trRate};*)
+(*args={u0Dim,diffRotDim,diffS,timeFactor,rDropletDim,asymmetry,swimMultiplier,tfinalSim,nParallelSystems,noiseSeed,hetQ,rtRate,trRate,fudgeFactor};*)
 (*runSimulation[args];*)
 (**)
 (*(** read simulation output **)*)
