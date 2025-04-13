@@ -83,7 +83,7 @@ msd=N[Mean[msdData[[All,2]]]];
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*calculateTemporalFreqSpectrum*)
 
 
@@ -98,7 +98,7 @@ msd=N[Mean[msdData[[All,2]]]];
 (*{freqs,powerSpectralDensity,phases}=calculateTemporalFreqSpectrum[dt,signal,windowingQ,nPaddedSamples]*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*test: frequency identification of n full periods*)
 
 
@@ -154,6 +154,58 @@ msd=N[Mean[msdData[[All,2]]]];
 (*foundFrequency=freqs[[#]]&/@Round[FindPeaks[powerSpectralDensity,0.0,0,peakThreshold][[All,1]]];*)
 (*Print["found frequency: ",foundFrequency];*)
 (*{foundFrequency,freqs,powerSpectralDensity}]*)
+
+
+(* ::Subsubsection:: *)
+(*analyze data*)
+
+
+(* ::Input:: *)
+(*data=Import[FileNameJoin[{$HomeDirectory,"Desktop","intensityTimetracesForJan.mat"}]][[1,1]];*)
+(*(** Assuming all time points have the same time difference between them **)*)
+(*dt=Mean[Differences@data[[1,All,1]]]*)
+(*values=data[[All,All,2]];*)
+(**)
+(*(** fourier settings **)*)
+(*windowingQ=False;*)
+(*nPadding=2Length[values[[1]]];*)
+(*padMemory=ConstantArray[0.0,nPadding];*)
+(**)
+(*(** calculate ffts **)*)
+(*ffts=calculateTemporalFreqSpectrum[dt,#,windowingQ,nPadding,padMemory][[{1,2}]]&/@values;*)
+(*freqData=ffts[[1,1]];*)
+(*mPSDi=Mean[ffts[[All,2]]];*)
+(*fMax=1.0;*)
+(*fMaxIndex=FirstPosition[freqData,_?(#>=fMax&)][[1]];*)
+(*mPSDiData={freqData,#/(Max[#]1.0)}\[Transpose][[2;;fMaxIndex]]&@mPSDi;*)
+(**)
+(*(** plot: intensity spectrum (PSD)**)*)
+(*fTicks=Table[If[Mod[f,0.5]==0,{f,DecimalForm[f,{3,1}],{0.02,0}},{f,"",{0.01,0}}],{f,0,1,0.1}];*)
+(*fTicks2={#[[1]],"",#[[3]]}&/@fTicks;*)
+(*pTicks=Table[{t,DecimalForm[t,{2,1}]},{t,0,1,0.5}];*)
+(*pTicks2={#[[1]],""}&/@pTicks;*)
+
+
+(* ::Input:: *)
+(*lineThickness=99.6923076923077`/72;*)
+(*fontSize=10 99.6923076923077`/72;*)
+(*plotOps={*)
+(*		Axes->None*)
+(*		,Frame->True*)
+(*		,FrameStyle->Directive[Black,fontSize,AbsoluteThickness[lineThickness],FontFamily->"Arial"]*)
+(*	};*)
+(*ipx={54,12};*)
+(*ListLinePlot[mPSDiData*)
+(*	,Evaluate[plotOps]*)
+(*	,AspectRatio->1/2*)
+(*	,PlotRange->{{-0.01,1.01}fMax,{-0.05,1.25}}*)
+(*	,FrameTicks->{{pTicks,pTicks2},{fTicks,fTicks2}}*)
+(*	,ImagePadding->{ipx,{35,8}}*)
+(*	,PlotStyle->Directive[Black,AbsoluteThickness[lineThickness]]*)
+(*]*)
+
+
+ListLinePlot[data[[1,All,{1,2}]]]
 
 
 (* ::Subsubsection::Closed:: *)
@@ -440,7 +492,7 @@ r\[Theta][\[Theta]_,\[Phi]_]:={Cos[\[Theta]]Cos[\[Phi]],Cos[\[Theta]]Sin[\[Phi]]
 r\[Phi][\[Theta]_,\[Phi]_]:={-Sin[\[Theta]]Sin[\[Phi]],Sin[\[Theta]]Cos[\[Phi]],0};
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*special analysis*)
 
 
@@ -472,7 +524,7 @@ fSwim[p_]:=swimFactor dragTransDim u0Dim p;
 freqOnlyRunning[u0Dim_]:=swimFactor dragTransDim u0Dim/(2\[Pi] (rDropletDim+rEcoliDim));
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*maxTheta*)
 
 
@@ -1579,11 +1631,11 @@ StyleBox[\"\[RightAngleBracket]\",\nFontSlant->\"Italic\"], \(fit\)]\) (\[Degree
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*doPlots*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*code*)
 
 
@@ -1835,7 +1887,7 @@ thetaDotData-thetaGravData  (** theta noise **)
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*updateIntensityLookupMap*)
 
 
@@ -1847,6 +1899,29 @@ thetaDotData-thetaGravData  (** theta noise **)
 (*path=FileNameJoin[{NotebookDirectory[],"..","Droplet optics","prop_test_dropletTilt_thetaPhi_analyticDirector_wvl_470_DnLC_0.20","zDistance_0.0"}];*)
 (*path=FileNameJoin[{NotebookDirectory[],"..","Droplet optics","RGB"}]*)
 (*thetaPhiIntensityInterpolation=updateIntensityLookupMap[path];*)
+
+
+(* ::Code:: *)
+(*rawString="0,630226339\t0,650020406\t0,689197473\t0,717853051\t0,713290728\t0,654277047\t0,566341708\t0,455507696\t0,309285571\t0,128632962\t0,239113181\t0,733882383\t0,339818443\t0,034834678\t0\t0,068419135*)
+(*0,630226339\t0,650152628\t0,689355223\t0,719570958\t0,717274742\t0,660631244\t0,577113895\t0,468189579\t0,316722419\t0,129818381\t0,247327654\t0,751471873\t0,363761802\t0,058072415\t0,016610914\t0,080852938*)
+(*0,630226339\t0,650029243\t0,688500033\t0,72233748\t0,727031044\t0,680592552\t0,608075181\t0,497458485\t0,33418296\t0,135175019\t0,260609119\t0,803221183\t0,438199669\t0,119015428\t0,07870989\t0,131495051*)
+(*0,630226339\t0,649701305\t0,687974744\t0,726963296\t0,743272128\t0,714940561\t0,659793072\t0,553020313\t0,362899412\t0,147901741\t0,277911909\t0,885610387\t0,555869311\t0,218768952\t0,157403089\t0,213451587*)
+(*0,630226339\t0,64955501\t0,687408545\t0,732298334\t0,762349446\t0,75555309\t0,722216386\t0,622943641\t0,402085643\t0,165674509\t0,295892175\t0,96331061\t0,697705845\t0,341970655\t0,242267861\t0,2940499*)
+(*0,630226339\t0,649302675\t0,686636485\t0,738172407\t0,781243158\t0,797500279\t0,787409821\t0,698130004\t0,450949628\t0,18348426\t0,303611468\t0,953760169\t0,83785851\t0,452647571\t0,321843741\t0,386442831*)
+(*0,630226339\t0,649055576\t0,685370555\t0,742570434\t0,797122922\t0,833614633\t0,840085342\t0,767275707\t0,501594358\t0,19511982\t0,215505614\t0,827300038\t0,951890075\t0,537451468\t0,369737987\t0,423047455*)
+(*0,630226339\t0,648694256\t0,684327831\t0,742554724\t0,802617346\t0,849894009\t0,867675614\t0,816328534\t0,543798137\t0,186121178\t0,066531368\t0,629502717\t1\t0,577370485\t0,390194475\t0,445857106";*)
+(**)
+(*xlsxData=Partition[ToExpression[StringJoin[{"{",StringReplace[rawString,{","->".","\t"->",","\n"->","}],"}"}]],16]\[Transpose];*)
+(*Export[FileNameJoin[{$HomeDirectory,"Desktop","normIntegratedIntensity.mat"}],xlsxData]*)
+
+
+(* ::Code:: *)
+(*data1=Import[FileNameJoin[{$HomeDirectory,"Desktop","normIntegratedIntensity.mat"}]][[1]]//Dimensions*)
+(*data2=Import[FileNameJoin[{$HomeDirectory,"Desktop","pathogen_sensing","Data","numerical_droplet_optics","lookup_map","normIntegratedIntensity.mat"}]][[1]]//Dimensions*)
+
+
+(* ::Subsubsection:: *)
+(*create normIntegratedIntensity.mat from data*)
 
 
 (* ::Subsubsection::Closed:: *)

@@ -12,7 +12,7 @@ Get[FileNameJoin[{NotebookDirectory[],"functions.wl"}]];
 Get[FileNameJoin[{NotebookDirectory[],"droplet_optics.wl"}]];
 
 
-(* ::Chapter::Closed:: *)
+(* ::Chapter:: *)
 (*Constants*)
 
 
@@ -85,18 +85,17 @@ parametersColor=<|
 |>;
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*parametersPaths: paths*)
 
 
-(*basePth=FileNameJoin[{$HomeDirectory,"Dropbox (MIT)","Bacteria Droplet Manuscript"}];*)
-basePth=FileNameJoin[{$HomeDirectory,"OneDrive","Bacteria Droplet Manuscript"}];
-pthData=FileNameJoin[{basePth,"Data"}];
-pthVideo=FileNameJoin[{basePth,"Videos"}];
-debugQ=True;
+basePth=NotebookDirectory[];
+pthData=FileNameJoin[{ParentDirectory[basePth],"Data"}];
+pthVideo=FileNameJoin[{ParentDirectory[basePth],"Videos"}];
+debugQ=False;
 
 parametersPaths=<|
-	"rawMoviesExperiment"->FileNameJoin[{basePth,"Videos"}]
+	"rawMoviesExperiment"->pthVideo
 	,"intensityDataExperiment"->FileNameJoin[{pthData,"experimental_intensity_time_traces"}]
 	,"intensitySpectraExperiment"->FileNameJoin[{pthData,"experimental_intensity_spectra"}]
 	,"dropletTrajectoriesExperiment"->FileNameJoin[{pthData,"experimental_droplet_trajectories"}]
@@ -106,9 +105,9 @@ parametersPaths=<|
 	,"intensitySpectraNumerical"->FileNameJoin[{pthData,"numerical_intensity_spectra"}]
 	,"parameterSweepNumerical"->FileNameJoin[{pthData,"numerical_parameter_sweep"}]
 	,"figs"->If[debugQ,
-			FileNameJoin[{basePth,"Figures","Figures debug"}],
-			FileNameJoin[{basePth,"Figures","Figures current"}]
-		]
+		FileNameJoin[{basePth,"Figures","Figures debug"}],
+		FileNameJoin[{basePth,"Figures","Figures current"}]
+	]
 |>;
 
 
@@ -239,7 +238,7 @@ MapThread[Complement[Range[#2],#1]&,{badLists,numberDroplets}]
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*getDropletFramesFromMovie*)
 
 
@@ -393,15 +392,6 @@ movieFile,nx,ny,dropletImages,trajectories0,trajectories,starts,trajectory,start
 
 
 (* ::Subsubsection::Closed:: *)
-(*debug: read out file names*)
-
-
-(* ::Input:: *)
-(*pthNumericalIntensityImages=FileNameJoin[{p["path","dropletOpticsNumerical"],"intensity_images"}];*)
-(*images=Import[FileNameJoin[{pthNumericalIntensityImages,#}]]&/@fileNames;*)
-
-
-(* ::Subsubsection::Closed:: *)
 (*debug: image cropping*)
 
 
@@ -445,20 +435,24 @@ movieFile,nx,ny,dropletImages,trajectories0,trajectories,starts,trajectory,start
 
 
 Clear[getIntensityImages];
-getIntensityImages[thetaData_,phiData_,{stepStart_,stepEnd_},p_,nImages_:5]:=Module[{n\[Theta],n\[Phi],nAllImages,timeSteps,thetaPhiTrajPoints,thetaPhiSamplePoints,thetaPhiTrajStrings,images,fileNames,pthNumericalIntensityImages,nSymmetryJumps},
-	timeSteps=Round[Subdivide[stepStart,stepEnd,nImages-1]];
-	thetaPhiTrajPoints={-Abs[#-\[Pi]/2.0]+\[Pi]/2.0&/@thetaData[[timeSteps]],-Abs[Mod[#,\[Pi]/2.0]-\[Pi]/4.0]+\[Pi]/4.0&/@phiData[[timeSteps]]}\[Transpose];
-	{n\[Theta],n\[Phi]}={40,20};
-	
+getIntensityImages[thetaData_,phiData_,{stepStart_,stepEnd_},p_,nImages_:5]:=Module[
+{n\[Theta],n\[Phi],nAllImages,timeSteps,thetaPhiTrajPoints,thetaPhiSamplePoints,thetaPhiTrajStrings,images,fileNames,desiredFileNames,pthNumericalIntensityImages,nSymmetryJumps,prefix},
+
 	pthNumericalIntensityImages=FileNameJoin[{p["path","dropletOpticsNumerical"],"intensity_images"}];
 	Print["Source for intensity images: ",pthNumericalIntensityImages];
+	fileNames=FileNames[All,pthNumericalIntensityImages];
+	prefix=StringSplit[FileBaseName[fileNames[[1]]],"_theta_"][[1]];
+	{n\[Theta],n\[Phi]}=Length/@DeleteDuplicates/@Transpose[StringSplit[FileBaseName[#],"_"][[{-3,-1}]]&/@fileNames];
 	nAllImages=Length[FileNames["*.png",pthNumericalIntensityImages]];
 	If[n\[Theta] n\[Phi]!=nAllImages,Print[Style["Warning: Less than expected number of images ("<>ToString[n\[Theta] n\[Phi]]<>") were found in the given image directory ("<>ToString[nAllImages]<>")!",Orange]];];
 	
+	(** get files in useful order **)
+	timeSteps=Round[Subdivide[stepStart,stepEnd,nImages-1]];
+	thetaPhiTrajPoints={-Abs[#-\[Pi]/2.0]+\[Pi]/2.0&/@thetaData[[timeSteps]],-Abs[Mod[#,\[Pi]/2.0]-\[Pi]/4.0]+\[Pi]/4.0&/@phiData[[timeSteps]]}\[Transpose];
 	thetaPhiSamplePoints=N@Flatten[Table[{\[Theta],\[Phi]},{\[Theta],Subdivide[0,\[Pi]/2,n\[Theta]-1]},{\[Phi],Subdivide[0,\[Pi]/4,n\[Phi]-1]}],1];
 	thetaPhiTrajStrings=ToString[DecimalForm[#,{4,3}]]&/@Nearest[thetaPhiSamplePoints,#][[1]]&/@thetaPhiTrajPoints;
-	fileNames="afterDropletIntensityXY_RGB_theta_"<>#[[1]]<>"_phi_"<>#[[2]]<>".png"&/@thetaPhiTrajStrings;
-	images=Import[FileNameJoin[{pthNumericalIntensityImages,#}]]&/@fileNames;
+	desiredFileNames=prefix<>"_theta_"<>#[[1]]<>"_phi_"<>#[[2]]<>".png"&/@thetaPhiTrajStrings;
+	images=Import[FileNameJoin[{pthNumericalIntensityImages,#}]]&/@desiredFileNames;
 	
 	(** output: rotated images **)
 	nSymmetryJumps=Quotient[phiData[[timeSteps]],\[Pi]/4];
@@ -660,11 +654,11 @@ goodStarts,sortByDecreasingLength,trajectories,starts},
 (*Figure 1*)
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Functions*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*fig1*)
 
 
@@ -722,7 +716,7 @@ goodStarts,sortByDecreasingLength,trajectories,starts},
 (*Export[FileNameJoin[{pthOutFig1,"fig1d.pdf"}],plot]*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Fig. 1e*)
 
 
@@ -736,7 +730,7 @@ goodStarts,sortByDecreasingLength,trajectories,starts},
 (*Export[FileNameJoin[{pthOutFig1,"fig1e.png"}],Grid[{singleDropletImages},Spacings->{0.1,0}]]*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*code*)
 
 
@@ -849,7 +843,7 @@ fig1dPlot[trajectoryYoung_,markerSteps_,markerColors_,p_]:=Module[{iTicks,iTicks
 (*Functions*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*fig2*)
 
 
@@ -946,7 +940,7 @@ fig1dPlot[trajectoryYoung_,markerSteps_,markerColors_,p_]:=Module[{iTicks,iTicks
 (*&,{indiPlots,{"plot2_young_spectrum_indi","plot2_old_spectrum_indi"}}];*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*code*)
 
 
@@ -1289,7 +1283,7 @@ fig2bcPlot[freqs_,meanSpectra_,iAmplitudes_,iWidths_,allSpectra_,stdSpectra_,p_,
 (*createMovieFramesSimulation*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*preliminary*)
 
 
@@ -1486,7 +1480,7 @@ fig2bcPlot[freqs_,meanSpectra_,iAmplitudes_,iWidths_,allSpectra_,stdSpectra_,p_,
 (*,"young",dt,trajDataAllYoung,timeDataYoung,freqDataYoung,pthFrames,tmax]*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*code**)
 
 
@@ -1731,7 +1725,7 @@ createPlotSphericalCap[sphereRadius_,\[Theta]PlotMaxDeg_]:=ParametricPlot3D[sphe
 (*Export[FileNameJoin[{pthOutFig3,"fig3b.png"}],plot,Background->None,ImageResolution->300]*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*code*)
 
 
@@ -1965,7 +1959,7 @@ fig3CommonPlotOptions[stepPlot_,sData_,dt_,runColor_,tumbleColor_,p_]:=Module[{i
 (*intensityImagesRow=fig3IntensityImageInsets[thetaData,phiData,stepStart,stepEnd,p]*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*debug: get intensity images*)
 
 
@@ -1976,7 +1970,7 @@ fig3CommonPlotOptions[stepPlot_,sData_,dt_,runColor_,tumbleColor_,p_]:=Module[{i
 (*intensityImages=Show[#,Graphics[{Red,Disk[{600,600},80]}],ImagePadding->{{0,0},{0,0}},PlotRangePadding->None,ImageSize->{Automatic,45}]&/@intensityImages0*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*debug: visualization test with 3d polygon planes*)
 
 
@@ -1994,7 +1988,7 @@ fig3CommonPlotOptions[stepPlot_,sData_,dt_,runColor_,tumbleColor_,p_]:=Module[{i
 (*,Lighting->"Neutral"]*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*code*)
 
 
@@ -2621,11 +2615,16 @@ rtRate,trRate,swimFactor,gravFactor,args,timeData,freqData,trajDataAll},
 (*saveNewSimulationResultAsDefault*)
 
 
+(* ::Subsubsection:: *)
+(*code*)
+
+
 (** Note: only run this when you are sure you want to keep the results! **)
 saveNewSimulationResultAsDefault[youngOldString_,p_]:=Module[{oldPthFn,newPthFn},
 	If[!MemberQ[{"young","old"},youngOldString],Print["Error: youngOldString ("<>youngOldString<>") must be either \"young\" or \"old\"!"];];
 	oldPthFn=FileNameJoin[{NotebookDirectory[],"build","runTumbleOutput.bin"}];
 	newPthFn=FileNameJoin[{p["path","runTumbleTrajectoriesNumerical"],"runTumbleOutput_"<>youngOldString<>".bin"}];
+	If[!DirectoryQ@#,CreateDirectory@#]&@p["path","runTumbleTrajectoriesNumerical"];
 	If[FileExistsQ@#,DeleteFile[#]]&@newPthFn;
 	CopyFile[oldPthFn,newPthFn];
 ]
@@ -2690,7 +2689,7 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 
 
 (* ::Subsection:: *)
-(*Figure 3ab*)
+(*Figure 3a,b*)
 
 
 (* ::Input:: *)
@@ -2774,7 +2773,7 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 (*{timeDataYoung,freqDataYoung,trajDataAllYoung}=getSimulationData[True,u0Dim,runTime0,tumbleTime0,loadDataQ,p];*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*save simulation as new default*)
 
 
@@ -2857,7 +2856,7 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 (*createMovieFramesPosition[trajectories[[trajIndex,stepsTransient;;stepsTransient+1;;2]],1,dt]*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*SI Video: intensity images*)
 
 
@@ -2996,7 +2995,7 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 (*{timeDataOld,freqDataOld,trajDataAllOld}=getSimulationData[False,u0Dim,runTime0,tumbleTime0,loadDataQ,p];*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*save simulation as new default*)
 
 
@@ -3064,7 +3063,7 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 (*]*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*SI Video: intensity images*)
 
 
@@ -3100,7 +3099,11 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 
 
 (* ::Input:: *)
-(*fig4[p]*)
+(*fig4[p];*)
+
+
+(* ::Subsubsection::Closed:: *)
+(*code*)
 
 
 fig4[p_]:=Module[{freqsEx,ampsEx,widthsEx,meanSpectraEx,meanSpectraSim,meanMap,stdMap,meanMapInterpolation,stdMapInterpolation,plotOpsFig4,pthOutFig4},
@@ -3282,7 +3285,7 @@ fig4cPlot[widthsEx_,plotOpsFig4_,pthOut_,p_]:=Module[{aTicks,aTicks2,wTicks,wTic
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*fig4dPlot: Width/Angle Mapping*)
 
 
@@ -3439,7 +3442,7 @@ fig4dPlot[meanMap_,stdMap_,meanMapInterpolation_,widthsEx_,plotOpsFig4_,pthOutFi
 (*StyleBox[\"\[LeftAngleBracket]\[Theta]\[RightAngleBracket]\",\nFontSlant->\"Italic\"]\) (\[Degree])"},FrameTicks->{{\[Theta]Ticks,\[Theta]Ticks2},{aTicks,aTicks2}},ImagePadding->ipadSubfigures,Axes->False,ImageSize->45mm]*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*test: error computation*)
 
 
@@ -3619,7 +3622,7 @@ fig4ePlot[meanMapInterpolation_,stdMapInterpolation_,widthsEx_,plotOpsFig4_,pthO
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*fig4PrepareData*)
 
 
@@ -3696,12 +3699,16 @@ fig4ePlot[meanMapInterpolation_,stdMapInterpolation_,widthsEx_,plotOpsFig4_,pthO
 (*#["ParameterErrors"]&/@iFitsAmp*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*test: visualize start/end point volumes/surfaces*)
 
 
 (* ::Text:: *)
 (*linear-linear-linear interpolation will result in the same contours, with the same logarithmized x,y coordinates*)
+
+
+(* ::Input:: *)
+(*dataScan=loadSimulationScanData[p];*)
 
 
 (* ::Input:: *)
@@ -3732,7 +3739,7 @@ fig4ePlot[meanMapInterpolation_,stdMapInterpolation_,widthsEx_,plotOpsFig4_,pthO
 (*	][[1]]];*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*visualize increasing and decreasing maps*)
 
 
@@ -3833,7 +3840,7 @@ meanMap,stdMap,meanMapInterpolation,stdMapInterpolation,pthOutFig4,widthInterpol
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*getSampledWidthAngleContours*)
 
 
@@ -3912,7 +3919,7 @@ getScanDataInterpolantsLinLinLin[dataScan_]:=Table[Interpolation[dataScan[[All,{
 getScanDataInterpolantsLogLogLin[dataScan_]:=Table[Interpolation[{Log10@#[[1]],Log10@#[[2]],#[[3]],#[[4]]}&/@dataScan[[All,{1,2,3,index}]],InterpolationOrder->1],{index,{4,5}}]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*getWidthAngleMappings*)
 
 
@@ -3957,7 +3964,7 @@ getWidthAngleMappings[meshPointsMinWidth_,meshPointsMaxWidth_,wMax_,widthInterpo
 	Print[AbsoluteTiming[
 		filteredMappings=Reap[Do[
 		If[(** conditions: initial+final runtimes are larger than tumbletimes + tumbletime decreases + speed decreases **)
-			pStart[[2]]<=Log10[tTumbleMax]\[And]pStart[[1]]>pStart[[2]]\[And]pEnd[[1]]>pEnd[[2]]\[And]pEnd[[2]]<pStart[[2]]\[And]pEnd[[3]]<pStart[[3]], 
+			pStart[[2]]<=Log10[tTumbleMax]\[And]pStart[[1]]>pStart[[2]]\[And]pEnd[[1]]>pEnd[[2]]\[And]pEnd[[2]]<pStart[[2]]\[And]pEnd[[3]]<pStart[[3]]\[And]pStart[[3]]<7.0, 
 			mapping=getWidthAngleMapping[{pStart,pEnd},widthInterpolationLogLogLin,angleInterpolationLogLogLin];
 			If[AllTrue[mapping[[All,1]],#<1.01wMax&]\[And]monotonousDecreaseQ[mapping[[All,1]]],
 				Sow[{pStart,pEnd,mapping}]
@@ -3966,9 +3973,10 @@ getWidthAngleMappings[meshPointsMinWidth_,meshPointsMaxWidth_,wMax_,widthInterpo
 		,{pStart,meshPointsMaxWidth},{pEnd,meshPointsMinWidth}]][[2,1]];
 	][[1]],"\[ThinSpace]s"];	
 	
+	Print["# all mappings: ",Length[filteredMappings]];
 	filteredMappingsDec=Select[filteredMappings,monotonousDecreaseQ[#[[3,All,2]]]&];
 	filteredMappingsInc=Select[filteredMappings,monotonousIncreaseQ[#[[3,All,2]]]&];
-	Print[Length/@{filteredMappingsDec,filteredMappingsInc}];
+	Print["# Decreasing/Increasing Mappings: ", Length/@{filteredMappingsDec,filteredMappingsInc}];
 	
 	maps=filteredMappingsDec[[All,3]];
 	meanMap=Mean[maps];
@@ -4106,7 +4114,7 @@ lineLinearLinearLinear[t_,parameterPointsStartEnd_]:={Log10[#[[1]]],Log10[#[[2]]
 lineLogLogLinear[t_,parameterPointsStartEnd_]:=((1-t){Log10[#[[1]]],Log10[#[[2]]],#[[3]]}&@ parameterPointsStartEnd[[1]]+t {Log10[#[[1]]],Log10[#[[2]]],#[[3]]}&@parameterPointsStartEnd[[-1]]);
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*loadSimulationScanData: load parameter cube data for run time, tumble time, speed, intensity amplitude, width and mean angle*)
 
 
@@ -4147,7 +4155,7 @@ loadSimulationScanData[p_]:=Module[{simFileNames,simFilesSorted,datasets,extract
 (*Functions*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*figS1*)
 
 
@@ -4155,7 +4163,7 @@ loadSimulationScanData[p_]:=Module[{simFileNames,simFilesSorted,datasets,extract
 (*figS1[p];*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*code*)
 
 
@@ -4164,7 +4172,8 @@ figS1[p_]:=Module[{pthOutputFigS1,solution,pthIntensityImages,pthIntensityLookup
 	figS1a[solution,pthOutputFigS1,p];
 	figS1b[solution,pthOutputFigS1,p];
 	figS1c[solution,pthOutputFigS1,p];
-	figS1d[pthOutputFigS1,pthIntensityImages,3,3];
+	(*figS1d[pthOutputFigS1,pthIntensityImages,3,3];*)
+	figS1d[pthOutputFigS1,pthIntensityImages];
 	figS1e[pthOutputFigS1,pthIntensityLookupMap];
 	figS1f[pthOutputFigS1,pthIntensityLookupMap];
 ]
@@ -4363,7 +4372,7 @@ figS1c[solution_,pthOutputFigS1_,p_]:=Module[{effectiveRadius,rMax,plotOps,nrSam
 
 
 (* ::Text:: *)
-(*Typically there are 40x20 images in theta and phi directions*)
+(*Typically there are 40x20 images in theta and phi directions for Jones calculations and 16x8 for meep calculations*)
 
 
 (* ::Subsubsection::Closed:: *)
@@ -4382,10 +4391,13 @@ figS1c[solution_,pthOutputFigS1_,p_]:=Module[{effectiveRadius,rMax,plotOps,nrSam
 
 
 Clear[figS1d];
-figS1d[pthOutputFigS1_,pthImages_,dTheta_:1,dPhi_:1,nTheta_:40,nPhi_:20]:=Module[{filePrefix,intensityImageFiles,intensityImagesFlat,intensityImages,intensityOverviewImage},
-	(*filePrefix="Propagation";*)
-	filePrefix="afterDropletIntensityXY_RGB_theta";
-	intensityImageFiles=FileNames[filePrefix<>"_*.png",pthImages];
+figS1d[pthOutputFigS1_,pthImages_,dTheta_:1,dPhi_:1]:=Module[{pthNumericalIntensityImages,fileNames,filePrefix,intensityImageFiles,intensityImagesFlat,intensityImages,intensityOverviewImage,nTheta,nPhi},
+	pthNumericalIntensityImages=FileNameJoin[{p["path","dropletOpticsNumerical"],"intensity_images"}];
+	Print["Source for intensity images: ",pthNumericalIntensityImages];
+	fileNames=FileNames[All,pthNumericalIntensityImages];
+	filePrefix=StringSplit[FileBaseName[fileNames[[1]]],"_theta_"][[1]];
+	{nTheta,nPhi}=Length/@DeleteDuplicates/@Transpose[StringSplit[FileBaseName[#],"_"][[{-3,-1}]]&/@fileNames];
+	intensityImageFiles=FileNames[filePrefix<>"_theta_*_phi_*.png",pthImages];
 	intensityImagesFlat=ImageReflect[ImageRotate[Import[#],-\[Pi]/2]]&/@intensityImageFiles;
 	intensityImages=Partition[intensityImagesFlat,nPhi];
 	intensityOverviewImage=ImageAssemble[Reverse[intensityImages\[Transpose][[;;;;dTheta,;;;;dPhi]]],Spacings->20,Background->White];
@@ -4426,7 +4438,7 @@ figS1e[pthOutputFigS1_,pthIntensityLookupMap_]:=Module[{spatiallyAveragedIntensi
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*figS1f: continuous mean intensity map*)
 
 
@@ -4502,7 +4514,7 @@ figS1PrepareData[p_]:=Module[{pthOutputFigS1,liquidCrystalSolution,pthIntensityI
 (*figS1[p];*)
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Figure S2: Analysis pipeline*)
 
 
@@ -4684,8 +4696,8 @@ figS4[p_]:=Module[{(*uMax,widthsEx,dataScan,plotOpsFigS4,pthOutFigS4,meshPointsM
 ]
 
 
-(* ::Subsection::Closed:: *)
-(*figS4a: inspect relevant width and mean angle iso-surfaces*)
+(* ::Subsection:: *)
+(*figS4a: inspect relevant width iso-surfaces*)
 
 
 (* ::Input:: *)
@@ -4727,7 +4739,7 @@ figS4a[dataScan_,widthsEx_,uMax_,plotOpsFigS4_,pthOutFigS4_,p_]:=Module[{plot,me
 
 
 (* ::Subsection::Closed:: *)
-(*figS4b: inspect relevant width and mean angle iso-surfaces*)
+(*figS4b: inspect relevant mean angle iso-surfaces*)
 
 
 (* ::Input:: *)
@@ -4754,7 +4766,7 @@ figS4b[dataScan_,widthsEx_,uMax_,plotOpsFigS4_,pthOutFigS4_,p_]:=Module[{plot,me
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*figS4c: evolution lines and surfaces*)
 
 
@@ -4850,7 +4862,7 @@ figS4d[filteredMappingsDec_,meanMap_,stdMap_,pthOutFigS4_,p_]:=Module[{wTicks,wT
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*figS4Prepare*)
 
 
