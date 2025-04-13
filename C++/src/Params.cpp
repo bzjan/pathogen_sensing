@@ -17,7 +17,7 @@
 void Params::readCmdline(const int argc, char *argv[]){
 	
 	// TODO: better cmdline parameter reader with named options
-	const int nCmdParams = 13;
+	const int nCmdParams = 14;
 	this->cmdParams.resize(nCmdParams);
 	
 	if(argc == nCmdParams+1){					// read parameters from commandline, if correct number (+1 for name of program)
@@ -36,7 +36,8 @@ void Params::readCmdline(const int argc, char *argv[]){
 			0,							// noise seed
 			0, 							// use heterogeneity; 0-false; 1-true
 			1.1111, 					// transition rate from R -> T in 1/s; Lopez et al. 2019
-			10.0 						// transition rate from T -> R in 1/s; Lopez et al. 2019
+			10.0, 						// transition rate from T -> R in 1/s; Lopez et al. 2019
+			0.53 						// dragFudgeFactor
 		};
 	}else{								// user error
 		printf("Error: Incorrect number (%d) of parameters are supplied!\n",argc); 
@@ -105,7 +106,7 @@ Params::Params(int argc, char *argv[]){
 	this->hetQ = this->cmdParams[10];							// whether to use heterogeneity
 	this->rateRT = this->cmdParams[11];							// R -> T rate in 1/s
 	this->rateTR = this->cmdParams[12];							// T -> R rate in 1/s
-	
+	this->dragFudgeFactor = this->cmdParams[13];				// dragFudgeFactor
 	
 	// numerical parameters
 	// OU
@@ -138,7 +139,8 @@ Params::Params(int argc, char *argv[]){
 	// const double dragFactorR = 8.0*M_PI*muDim*pow(rDropletDim,3)/pow(rDropletDim+rEcoliDim,2);			// rotational Stokes drag factor of droplet in kg/s for force, see SI, not in torque, but linear force description
 	const double dragFactorR = 8.0*M_PI*muDim*rDropletDim;				// rotational Stokes drag factor of droplet in kg/s for force, see SI, not in torque, but linear force description
 	// const double dragFudgeFactor = 0.25;
-	const double dragFudgeFactor = 0.194545;	// average of ODE fit for speeds u = 4:2:20
+	// const double dragFudgeFactor = 0.194545;	// average of ODE fit for speeds u = 4:2:20
+	// const double dragFudgeFactor = 0.6;	// from literature
 	// const double dragFudgeFactor = 0.5;
 	// const double dragFudgeFactor = 1.0;
 	const double dragFactor = dragFudgeFactor*(dragFactorT + dragFactorR);				// total drag due to bacteria + droplet
