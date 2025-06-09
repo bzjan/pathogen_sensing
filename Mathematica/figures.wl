@@ -12,11 +12,11 @@ Get[FileNameJoin[{NotebookDirectory[],"functions.wl"}]];
 Get[FileNameJoin[{NotebookDirectory[],"droplet_optics.wl"}]];
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Constants*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*parametersExperiment: parameters*)
 
 
@@ -29,7 +29,7 @@ parametersExperiment=<|
 |>;
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*parametersFourier: for spectral analysis*)
 
 
@@ -41,7 +41,7 @@ parametersFourier=<|
 |>;
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*parametersPlot: journal rules for plotting*)
 
 
@@ -65,7 +65,7 @@ parametersPlot=<|
 |>;
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*parametersColor: colors*)
 
 
@@ -85,7 +85,7 @@ parametersColor=<|
 |>;
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*parametersPaths: paths*)
 
 
@@ -111,7 +111,7 @@ parametersPaths=<|
 |>;
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*p: all parameters together*)
 
 
@@ -2563,16 +2563,16 @@ fig3TrajectoryOnSphericalCap[trajData_,\[Theta]PlotMaxDeg_,stepStart_,stepEnd_,c
 getColorFunctionRT[step_,sData_,dt_,runColor_,tumbleColor_]:=Function[{t,y},If[Round[t/dt]<=step,If[sData[[Round[t/dt]]]==0,runColor,tumbleColor],LightGray]]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*getSimulationData*)
 
 
 (* ::Input:: *)
-(*{timeData,freqData,trajDataAll}=getSimulationData[True,u0Dim,runTime0,tumbleTime0,loadDataQ,p]*)
+(*{timeData,freqData,trajDataAll}=getSimulationData[True,u0Dim,runTime0,tumbleTime0,frictionFactor,loadDataQ,p]*)
 
 
 Clear[getSimulationData];
-getSimulationData[youngOldQ_,u0Dim_,runTime0_,tumbleTime0_,loadDataQ_,p_]:=Module[{debugPlotQ,plotNoiseQ,detailedForceAnalysisQ,diffRotDim,rDropletDim,
+getSimulationData[youngOldQ_,u0Dim_,runTime0_,tumbleTime0_,frictionFactor_,loadDataQ_,p_]:=Module[{debugPlotQ,plotNoiseQ,detailedForceAnalysisQ,diffRotDim,rDropletDim,
 diffS,timeFactor,asymmetry,tfinalSim,nParallelSystems,noiseSeed,tTransient,hetQ,pathLookupMap,swimMultiplier,stepSize,fileName,
 rtRate,trRate,swimFactor,gravFactor,args,timeData,freqData,trajDataAll},
 	{debugPlotQ,plotNoiseQ,detailedForceAnalysisQ}={False,False,False};
@@ -2595,7 +2595,7 @@ rtRate,trRate,swimFactor,gravFactor,args,timeData,freqData,trajDataAll},
 	If[!loadDataQ,
 		(** run simulation **)
 		Print["Running simulation"];
-		args={u0Dim,diffRotDim,diffS,timeFactor,rDropletDim,asymmetry,swimMultiplier,tfinalSim,nParallelSystems,noiseSeed,hetQ,rtRate,trRate};
+		args={u0Dim,diffRotDim,diffS,timeFactor,rDropletDim,asymmetry,swimMultiplier,tfinalSim,nParallelSystems,noiseSeed,hetQ,rtRate,trRate,frictionFactor};
 		runSimulation[args];
 		{nSteps,dt,times,trajectories,stepsTransient}=readSimulationOutput[tfinalSim,tTransient,stepSize];
 	,
@@ -2768,9 +2768,9 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 
 
 (* ::Input:: *)
-(*{u0Dim,runTime0,tumbleTime0}={7.36*^-6,0.9,0.1};      (** for friction=0.195 friction0, w=0.23 **)*)
+(*{u0Dim,runTime0,tumbleTime0,frictionFactor}={7.36*^-6,0.9,0.1,1.0};      (** for friction=0.195 friction0, w=0.23 **)*)
 (*loadDataQ=False;*)
-(*{timeDataYoung,freqDataYoung,trajDataAllYoung}=getSimulationData[True,u0Dim,runTime0,tumbleTime0,loadDataQ,p];*)
+(*{timeDataYoung,freqDataYoung,trajDataAllYoung}=getSimulationData[True,u0Dim,runTime0,tumbleTime0,frictionFactor,loadDataQ,p];*)
 
 
 (* ::Subsubsection:: *)
@@ -2990,9 +2990,9 @@ siMoviePlotIntensitySpectrum[step_,freqData_,trajDataAll_,ageString_,p_,ipx_,run
 
 
 (* ::Input:: *)
-(*{u0Dim,runTime0,tumbleTime0}={3.2*^-6,1.62,0.01}(*{3.2*^-6(*7.2*^-6*),0.9,0.011}*);      (** for friction=0.195 friction0, w=0.08 **)*)
+(*{u0Dim,runTime0,tumbleTime0,frictionFactor}={3.2*^-6,1.62,0.01,1.0}(*{3.2*^-6(*7.2*^-6*),0.9,0.011}*);      (** for friction=0.195 friction0, w=0.08 **)*)
 (*loadDataQ=False;*)
-(*{timeDataOld,freqDataOld,trajDataAllOld}=getSimulationData[False,u0Dim,runTime0,tumbleTime0,loadDataQ,p];*)
+(*{timeDataOld,freqDataOld,trajDataAllOld}=getSimulationData[False,u0Dim,runTime0,tumbleTime0,frictionFactor,loadDataQ,p];*)
 
 
 (* ::Subsubsection:: *)
@@ -3712,10 +3712,11 @@ fig4ePlot[meanMapInterpolation_,stdMapInterpolation_,widthsEx_,plotOpsFig4_,pthO
 
 
 (* ::Input:: *)
+(*zmax=6.5(*10*);*)
 (*{widthInterpolationLogLogLin,angleInterpolationLogLogLin}=getScanDataInterpolantsLogLogLin[dataScan];*)
 (*{wMin,wMax}={Floor[#[[1]],0.01],Ceiling[#[[2]],0.01]}&@MinMax[widthsEx];*)
-(*plotWidthContourMinWidth=ContourPlot3D[widthInterpolationLogLogLin[x,y,z],{x,Log10@0.1,Log10@10},{y,Log10@0.01,Log10@1},{z,1,10},Contours->{wMin}];*)
-(*plotWidthContourMaxWidth=ContourPlot3D[widthInterpolationLogLogLin[x,y,z],{x,Log10@0.1,Log10@10},{y,Log10@0.01,Log10@1},{z,1,10},Contours->{wMax}];*)
+(*plotWidthContourMinWidth=ContourPlot3D[widthInterpolationLogLogLin[x,y,z],{x,Log10@0.01,Log10@10},{y,Log10@0.01,Log10@1},{z,1,zmax},Contours->{wMin}];*)
+(*plotWidthContourMaxWidth=ContourPlot3D[widthInterpolationLogLogLin[x,y,z],{x,Log10@0.01,Log10@10},{y,Log10@0.01,Log10@1},{z,1,zmax},Contours->{wMax}];*)
 (**)
 (*dn=100;*)
 (*meshPointsMinWidth=First[Cases[plotWidthContourMinWidth, GraphicsComplex[points_, ___] :> points, Infinity]][[;;;;dn]];*)
@@ -3724,8 +3725,8 @@ fig4ePlot[meanMapInterpolation_,stdMapInterpolation_,widthsEx_,plotOpsFig4_,pthO
 (**)
 (*{trTicksLog,ttTicksLog}=setRunTumbleTicks[True];*)
 (*plotWidthPointsAndContours=Show[*)
-(*ListPointPlot3D[{meshPointsMaxWidth,meshPointsMinWidth},PlotRange->{Log10@{0.099,10.1},Log10@{0.0099,0.1 1.01},{0.99,10.01}},Ticks->{trTicksLog,ttTicksLog,{1,5,10}},BoxRatios->{1,1,1}]*)
-(*,ContourPlot3D[widthInterpolationLogLogLin[x,y,z],{x,Log10@0.1,Log10@10},{y,Log10@0.01,Log10@0.1},{z,1,10},ContourStyle->Opacity[0.6],Contours->{wMin,wMax},PlotLegends->Table["Width = "<>ToString[DecimalForm[w,{2,2}]]<>" Hz",{w,{wMin,wMax}}],Mesh->None]*)
+(*ListPointPlot3D[{meshPointsMaxWidth,meshPointsMinWidth},PlotRange->{Log10@{0.0099,10.1},Log10@{0.0099,0.1 1.01},{0.99,zmax 1.001}},Ticks->{trTicksLog,ttTicksLog,{1,5,10}},BoxRatios->{1,1,1}]*)
+(*,ContourPlot3D[widthInterpolationLogLogLin[x,y,z],{x,Log10@0.01,Log10@10},{y,Log10@0.01,Log10@0.1},{z,1,zmax},ContourStyle->Opacity[0.6],Contours->{wMin,wMax},PlotLegends->Table["Width = "<>ToString[DecimalForm[w,{2,2}]]<>" Hz",{w,{wMin,wMax}}],Mesh->None]*)
 (*]*)
 
 
@@ -3739,17 +3740,26 @@ fig4ePlot[meanMapInterpolation_,stdMapInterpolation_,widthsEx_,plotOpsFig4_,pthO
 (*	][[1]]];*)
 
 
+allMappings//Length
+
+
 (* ::Subsubsection:: *)
 (*visualize increasing and decreasing maps*)
 
 
 (* ::Input:: *)
+(*filteredMappingsDec=Select[filteredMappings,monotonousDecreaseQ[#[[3,All,2]]]&];*)
+(*filteredMappingsInc=Select[filteredMappings,monotonousIncreaseQ[#[[3,All,2]]]&];*)
+(*Print["# Decreasing/Increasing Mappings: ", Length/@{filteredMappingsDec,filteredMappingsInc}];*)
+
+
+(* ::Input:: *)
 (*Graphics3D[{Opacity[0.2]*)
 (*,Green,Line[#[[{1,2}]]]&/@filteredMappingsDec*)
-(*(*,Red,Line[#[[{1,2}]]]&/@filteredMapping3Inc*)*)
+(*,Red,Line[#[[{1,2}]]]&/@filteredMappingsInc*)
 (*}*)
 (*,Axes->True*)
-(*,PlotRange->{Log10@{0.099,10.1},Log10@{0.0099,0.1 1.01},{0.99,10.01}},(*Ticks->{trTicksLog,ttTicksLog,{1,5,10}},*)BoxRatios->{1,1,1}*)
+(*,PlotRange->{Log10@{0.0099,10.1},Log10@{0.0099,0.1 1.01},{0.99,zmax 1.001}},(*Ticks->{trTicksLog,ttTicksLog,{1,5,10}},*)BoxRatios->{1,1,1}*)
 (*]*)
 
 
@@ -3931,6 +3941,47 @@ getScanDataInterpolantsLogLogLin[dataScan_]:=Table[Interpolation[{Log10@#[[1]],L
 (*debug*)
 
 
+(* ::Code:: *)
+(*tTumbleMax=0.1;*)
+(*Print[AbsoluteTiming[*)
+(*	filteredMappings2=Reap[Do[*)
+(*	If[(** conditions: initial+final runtimes are larger than tumbletimes + tumbletime decreases + speed decreases **)*)
+(*		pStart[[2]]<=Log10[tTumbleMax]\[And]pStart[[1]]>pStart[[2]]\[And]pEnd[[1]]>pEnd[[2]]\[And]pEnd[[2]]<pStart[[2]]\[And]pEnd[[3]]<pStart[[3]]\[And]pStart[[3]]<7.0, *)
+(*		mapping=getWidthAngleMapping[{pStart,pEnd},widthInterpolationLogLogLin,angleInterpolationLogLogLin];*)
+(*		If[AllTrue[mapping[[All,1]],#<1.01wMax&]\[And]monotonousDecreaseQ[mapping[[All,1]]],*)
+(*			Sow[{pStart,pEnd,mapping}]*)
+(*		]*)
+(*	]*)
+(*	,{pStart,meshPointsMaxWidth},{pEnd,meshPointsMinWidth}]][[2,1]];*)
+(*][[1]],"\[ThinSpace]s"];*)
+
+
+widthsEx
+
+
+Length[filteredMappings2]
+ListPlot[filteredMappings2[[;;;;10,3]],PlotRange->All,Frame->True]
+
+
+Length[filteredMappings]
+ListPlot[filteredMappings[[;;10,3]],PlotRange->All,Frame->True]
+
+
+	Print["# all mappings: ",Length[filteredMappings]];
+	filteredMappingsDec=Select[filteredMappings2,monotonousDecreaseQ[#[[3,All,2]]]&];
+	filteredMappingsInc=Select[filteredMappings2,monotonousIncreaseQ[#[[3,All,2]]]&];
+	Print["# Decreasing/Increasing Mappings: ", Length/@{filteredMappingsDec,filteredMappingsInc}];
+
+
+filteredMappingsInc
+
+
+ListPlot[filteredMappingsInc[[;;,3]],PlotRange->All,Frame->True]
+
+
+{wMin,wMax}
+
+
 (* ::Input:: *)
 (*widthsEx=Flatten[Import[FileNameJoin[{p["path","widthsExperiment"],"experimental_widths.dat"}]]];*)
 (*{dataScan,meshPointsMinWidth,meshPointsMaxWidth,{wMin,wMax},widthInterpolationLogLogLin,angleInterpolationLogLogLin}=getSampledWidthAngleContours[widthsEx,p];*)
@@ -3977,6 +4028,7 @@ getWidthAngleMappings[meshPointsMinWidth_,meshPointsMaxWidth_,wMax_,widthInterpo
 	filteredMappingsDec=Select[filteredMappings,monotonousDecreaseQ[#[[3,All,2]]]&];
 	filteredMappingsInc=Select[filteredMappings,monotonousIncreaseQ[#[[3,All,2]]]&];
 	Print["# Decreasing/Increasing Mappings: ", Length/@{filteredMappingsDec,filteredMappingsInc}];
+	Print["Error: No decreasing mappings were found!"];
 	
 	maps=filteredMappingsDec[[All,3]];
 	meanMap=Mean[maps];
@@ -4147,7 +4199,7 @@ loadSimulationScanData[p_]:=Module[{simFileNames,simFilesSorted,datasets,extract
 (*fig4[p];*)
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Figure S1: Liquid crystal optics*)
 
 
@@ -4681,6 +4733,10 @@ figS1PrepareData[p_]:=Module[{pthOutputFigS1,liquidCrystalSolution,pthIntensityI
 (*debug*)
 
 
+	uMax=10;
+	{widthsEx,dataScan,plotOpsFigS4,pthOutFigS4,meshPointsMinWidth,meshPointsMaxWidth,{wMin,wMax},filteredMappingsDec,meanMap,stdMap}=figS4Prepare[uMax,p];
+
+
 (* ::Subsubsection:: *)
 (*code*)
 
@@ -4700,6 +4756,10 @@ figS4[p_]:=Module[{(*uMax,widthsEx,dataScan,plotOpsFigS4,pthOutFigS4,meshPointsM
 (*figS4a: inspect relevant width iso-surfaces*)
 
 
+(* ::Text:: *)
+(*plot width iso-surfaces in parameter space spanned by run-time, tumble-time and velocity*)
+
+
 (* ::Input:: *)
 (*figS4a[dataScan,widthsEx,uMax,plotOpsFigS4,pthOutFigS4,p];*)
 
@@ -4709,8 +4769,8 @@ figS4[p_]:=Module[{(*uMax,widthsEx,dataScan,plotOpsFigS4,pthOutFigS4,meshPointsM
 
 
 (* ::Input:: *)
-(*ops={ScalingFunctions->{"Log10","Log10"},ContourStyle->Opacity[0.6],Mesh->None,PlotLegends->Automatic,PlotRange->{Log10@{0.09,9.`},Log10@{0.01,1},{1,12}},AxesLabel->{"\!\(\*SubscriptBox[\(t\), \(Run\)]\) (s)","\!\(\*SubscriptBox[\(t\), \(Tumble\)]\) (s)",Rotate["u (\[Mu]m/s)",\[Pi]/2]},AxesStyle->Black};*)
-(*ListContourPlot3D[dataScan[[All,{1,2,3,4}]],Evaluate[ops],PlotLabel->Style["Width (Hz)",Black],Contours->{0.08,0.161,0.24,0.28}]*)
+(*ops={ScalingFunctions->{"Log10","Log10"},ContourStyle->Opacity[0.6],Mesh->None,PlotLegends->Automatic,PlotRange->{Log10@{0.009,9.`},Log10@{0.01,1},{1,12}},AxesLabel->{"\!\(\*SubscriptBox[\(t\), \(Run\)]\) (s)","\!\(\*SubscriptBox[\(t\), \(Tumble\)]\) (s)",Rotate["u (\[Mu]m/s)",\[Pi]/2]},AxesStyle->Black};*)
+(*ListContourPlot3D[dataScan[[All,{1,2,3,4}]],Evaluate[ops],PlotLabel->Style["Width (Hz)",Black],Contours->{0.08,0.161,0.24,0.25(*0.28*)}]*)
 (*ListContourPlot3D[dataScan[[All,{1,2,3,5}]],Evaluate[ops],PlotLabel->Style["Mean angle (\[Degree])",Black],Contours->Range[5,25,10.]]*)
 (*ListContourPlot3D[dataScan[[All,{1,2,3,6}]],Evaluate[ops],PlotLabel->"\!\(\*SubscriptBox[\(I\), \(max\)]\)-\!\(\*SubscriptBox[\(I\), \(min\)]\)"]*)
 
@@ -4789,7 +4849,7 @@ figS4c[dataScan_,filteredMappingsDec_,wMin_,wMax_,meshPointsMaxWidth_,meshPoints
 		(** surfaces **)
 		ContourPlot3D[widthInterpolationLinLinLin[x,y,z],{x,0.1,10},{y,0.01,0.1},{z,1,10}
 			,PlotLabel->Style["Trajectories",Black]
-			,PlotRange->{{0.1,10},{0.01,0.1},{1,uMax}}
+			,PlotRange->{{0.01,10},{0.01,0.1},{1,uMax}}
 			,PlotRangePadding->Scaled[0.02]
 			,Evaluate[plotOpsFigS4]
 			,BoundaryStyle->None
@@ -4866,6 +4926,19 @@ figS4d[filteredMappingsDec_,meanMap_,stdMap_,pthOutFigS4_,p_]:=Module[{wTicks,wT
 (*figS4Prepare*)
 
 
+(* ::Subsubsection:: *)
+(*debug*)
+
+
+(* ::Input:: *)
+(*widthsEx=Flatten[Import[FileNameJoin[{p["path","widthsExperiment"],"experimental_widths.dat"}]]];*)
+(*{dataScan,meshPointsMinWidth,meshPointsMaxWidth,{wMin,wMax},widthInterpolationLogLogLin,angleInterpolationLogLogLin}=getSampledWidthAngleContours[widthsEx,p];*)
+
+
+(* ::Subsubsection:: *)
+(*code*)
+
+
 (* ::Input:: *)
 (*{widthsEx,dataScan,plotOpsFigS4,pthOutFigS4,meshPointsMinWidth,meshPointsMaxWidth,{wMin,wMax},filteredMappingsDec}=figS4Prepare[uMax,p];*)
 
@@ -4892,7 +4965,7 @@ figS4Prepare[uMax_,p_]:=Module[{widthsEx,dataScan,plotOpsFigS5,trTicks,ttTicks,p
 		,ImagePadding->{{30,0},{15,5}}
 		,ImageSize->220
 		,Mesh->None
-		,PlotRange->{Log10@{0.1,10},Log10@{0.01,(*1*)0.1},{1,uMax}}
+		,PlotRange->{Log10@{0.01,10},Log10@{0.01,(*1*)0.1},{1,uMax}}
 		,ScalingFunctions->{"Log10","Log10","Linear"}
 		,Ticks->{trTicks,ttTicks,{1,5,10}}
 	};

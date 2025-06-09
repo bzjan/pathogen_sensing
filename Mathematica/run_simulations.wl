@@ -1079,7 +1079,7 @@ fudgeFactor=1.0;
 
 (* ::Input:: *)
 (*{debugPlotQ,plotNoiseQ,detailedForceAnalysisQ,showTransientQ}={False,False,False,False};*)
-(*outputName="production_fudge_friction_0.3_u0_1_14_pc_meep_slower";*)
+(*outputName="production_fudge_friction_0.3_u0_1_14_pc_meep_slower_n1000";*)
 (*pathLookupMap=FileNameJoin[{NotebookDirectory[],"..","Data","numerical_droplet_optics","lookup_map"}];*)
 (*thetaPhiIntensityInterpolation=updateIntensityLookupMap[pathLookupMap];*)
 (**)
