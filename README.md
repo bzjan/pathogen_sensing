@@ -41,7 +41,24 @@ pacman -Su
 # gcc, make, cmake, boost, mpi, gdb, eigen
 pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-boost mingw-w64-x86_64-msmpi mingw-w64-x86_64-gdb  mingw-w64-x86_64-python-pygments mingw-w64-x86_64-eigen3
 ```
-* In Visual Studio Code install and use the CMake Tools extension to automatically detect the installation files, build the simulator executable in Release mode (takes about 5s) and run unit tests.
+* In Visual Studio Code install and use the `CMake Tools` extension to automatically detect the installation files, build the simulator executable in Release mode (takes about 5s) and run unit tests. ALternatively, run:
+```powershell
+cd .\C++\
+cmake -S . -B ./build 
+cmake --build ./build
+```
+* You can test that the executable works correctly, e.g. in windows using:
+```powershell
+.\build\run_sim_win.exe
+```
+The terminal should show:
+```powershell
+cmdParams:      2e-05,  3.5,    120,    0.2,    5e-06,  0,      1,      100,    1,      0,      0,      1.1111, 10,     0.53
+pthout $REPO_LOCATION\C++\build\
+0.526547 | 1.11559
+Computation finished
+execution time: 11 ms = 0 h, 0 min, 0 s.
+```
 * The compiled executable must be placed in a subfolder `build` in the folder where the Mathematica files reside for Mathematica to be able to call the executable, e.g.
 ```powershell
 Copy-Item -Path "C++/build" -Destination "Mathematica/build" -Recurse
