@@ -46,7 +46,7 @@ def rotation_matrix_from_vectors(vec1, vec2):
         c = np.dot(a, b)
         s = np.linalg.norm(v)
         kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
-        return np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
+        return np.eye(3) + kmat + kmat @ kmat * ((1 - c) / (s ** 2))
     else:
         return np.eye(3) #cross of all zeros only occurs on identical directions
 
@@ -54,14 +54,10 @@ def rotation_matrix_from_vectors(vec1, vec2):
 def mp2np(mpVector):
     return np.array(mpVector)
 
-
-
-
-
 ## set parameters and read input parameters
 [tiltTheta,tiltPhi] = read_input_parameters()
 
-trialIndex=16
+trialIndex=17 # originally 16
 # 8 - shell, interpolated field (slow, init > 75min), short
 # 9 - hedgehog (faster) with issue at origin!, short
 # 10 - hedgehog (faster) without issue at origin, short
@@ -72,32 +68,29 @@ trialIndex=16
 # 15 - shell, analytical approximation (slow, init > 10min), long, Iy (12329.2665 s for 50; 9459.0974 s for 35)
 # 16 - shell, analytical approximation (slow, init > 10min), long, Iy, nice plot
 
-
 ## 10 procs: 1167.23s for grid init
 ## 6 procs: xxx s for grid init
 
 
 nCPUs = mp.count_processors()
-output_dir = os.path.join(".", f"output_ana_droplet_theta_{tiltTheta:.2f}_phi_{tiltPhi:.2f}_cpus_{nCPUs}_trial_{trialIndex}")
+output_dir = os.path.join(".", f"output_630_ana_droplet_theta_{tiltTheta:.2f}_phi_{tiltPhi:.2f}_cpus_{nCPUs}_trial_{trialIndex}")
 if not os.path.isdir(output_dir):
-    os.makedirs(output_dir)
-shutil.copyfile(__file__, os.path.join(output_dir,__file__))
+    os.makedirs(output_dir, exist_ok=True)
+try:
+    shutil.copyfile(__file__, os.path.join(output_dir,__file__))
+except shutil.SameFileError:
+    pass
 
 eps_averaging = False              # use subpixel averaging (True, default) or not (False)
 force_complex_fields = True        # use real (False, default) or complex (True) fields in simulation?
 use_symmetry = False               # use symmetry for speedup (True) or not (False)
 
 # simulationTime = 100   # full simulation; for (16,16,24) too long
-simulationTime = 35   # full simulation
-# simulationTime = 70   # full simulation
-# simulationTime = 1     # test simulation
-# simulationTime = 5     # test simulation
+simulationTime = 35   # full simulation - USE
 
-
-cell = mp.Vector3(16, 16, 24)    # numbers are in microns
+cell = mp.Vector3(16, 16, 24)    # numbers are in microns - originally mp.Vector3(16, 16, 24)
 # resolution = 40                  # for interpolation spatial resolution: 40 pixels/micron
 resolution = 30                  # spatial resolution: 30 pixels/micron
-
 
 complexFactor = int(force_complex_fields) + 1       # False - x1 (real), True - x2 (real+imag)
 floatSize=8         # double datatype
@@ -116,7 +109,7 @@ nH2O=1.33
 rDroplet=3.5                # in um
 tiltDirector3d = mp.Vector3(np.cos(tiltPhi)*np.sin(tiltTheta), np.sin(tiltPhi)*np.sin(tiltTheta), np.cos(tiltTheta))
 
-wvl = 0.550        # lambda = 550 nm; spatial scaling is by default: 1 micron
+wvl = 0.630        # lambda = 630 nm; spatial scaling is by default: 1 micron
 freq = 1.0/wvl     # frequency f, c=1 in meep units
 bndWidth = 1.0     # width of absorbing boundary layer
 freqInMedium = freq/nH2O
@@ -129,6 +122,7 @@ if pxWvl < 8:
 
 sourceField = mp.Ex
 observeField = mp.Ey
+
 
 ## load position and director vector data {x,y,z,director} from hdf5 file
 file="./positionDirectorRegularGrid.hdf5"
@@ -154,8 +148,8 @@ epsilonLC = np.array([
     [0, 0, epsLCe]
 ])
 
-rotaMatrix = rotation_matrix_from_vectors(mp2np(tiltDirector3d),np.array([0,0,-1]))      # from tilted to upright; 
-rotaMatrixInv = rotation_matrix_from_vectors(np.array([0,0,-1]),mp2np(tiltDirector3d))
+rotaMatrix = rotation_matrix_from_vectors(mp2np(tiltDirector3d),np.array([0,0,1]))
+rotaMatrixInv = rotation_matrix_from_vectors(np.array([0,0,1]),mp2np(tiltDirector3d))
 
 mediumLC = mp.Medium(epsilon_diag=mp.Vector3(epsLCo, epsLCo, epsLCe))
 mediumFC = mp.Medium(index=nFC)
@@ -169,16 +163,17 @@ def biphase_droplet(p):
 biphase_droplet.do_averaging = eps_averaging    ## turn on subpixel averaging
 
 bcBottom = np.array([0, 0, -1])
+
 def bcHemisphere(x, y, z):
     eps = 0.000000001
     norm = np.sqrt(x**2 + y**2 + eps)
     return np.array([ 
         (x*z)/norm, 
         (y*z)/norm, 
-        -(rDroplet**2 - z**2)/norm
+        -norm
     ])
 
-def directorAnalyticalApproximation(p0):
+def directorAnalyticalApproximation(p0): # V2
     x,y,z = p0
     eps = 0.000000001
     if np.sqrt(x**2 + y**2) < rDroplet:
@@ -191,10 +186,10 @@ def biphase_droplet_lc(p):
     if p.norm() < rDroplet:
         if p.dot(tiltDirector3d) >= 0.0:                  # in meep
             p0 = rotaMatrix @ mp2np(p)                    # in numpy; position p0 in untilted configuration corresponding to tilted position p
-            # director = directorInterpolant(p0)[0]         # in numpy; get director from sampled mma solution and boundary condition
-            director = directorAnalyticalApproximation(p0)  # in numpy; get director from sampled mma solution and boundary condition
+            x0,y0,z0 = p0
+            director = bcHemisphere(x0,y0,z0)
             tiltedDirector = rotaMatrixInv @ director     # in numpy; rotate director into tilted configuration
-            rotaMatrixDirector = rotation_matrix_from_vectors([0,0,-1],tiltedDirector)   # in numpy; get rotation matrix that rotates director from natural state into tilted position
+            rotaMatrixDirector = rotation_matrix_from_vectors([0,0,1],tiltedDirector)
             rotatedEpsilon = rotaMatrixDirector @ epsilonLC @ rotaMatrixDirector.transpose()
             lc_epsilon_diag = mp.Vector3(rotatedEpsilon[0,0], rotatedEpsilon[1,1], rotatedEpsilon[2,2])
             lc_epsilon_offdiag = mp.Vector3(rotatedEpsilon[1,0], rotatedEpsilon[2,0], rotatedEpsilon[2,1])
@@ -204,7 +199,6 @@ def biphase_droplet_lc(p):
     else:
         return mediumH2O
 biphase_droplet_lc.do_averaging = eps_averaging
-
 
 def biphase_droplet_lc_hedgehog(p):
     if p.norm() < rDroplet:
@@ -226,9 +220,6 @@ def biphase_droplet_lc_hedgehog(p):
         return mediumH2O
 biphase_droplet_lc_hedgehog.do_averaging = eps_averaging
 
-
-
-
 ## run simulation
 
 print(f'Propagation of electromagnetic waves through tilted complex emulsion droplet')
@@ -239,7 +230,6 @@ geometry = [
         center=mp.Vector3(),
         # material=biphase_droplet              # no director dependence
         material=biphase_droplet_lc
-        # material=biphase_droplet_lc_hedgehog    # analytical test case
     )
 ]
 
@@ -247,6 +237,7 @@ geometry = [
 sources = [
     mp.Source(
         mp.ContinuousSource(frequency=freq,is_integrated=True),     # is_integrated=True must be set for sources extending into PMLs
+        # center=mp.Vector3(0.0,0.0,5.0),
         center=mp.Vector3(0.0,0.0,5.0),
         size=mp.Vector3(cell.x,cell.y,0.0),
         component=sourceField
@@ -255,12 +246,9 @@ sources = [
 
 
 pml_layers = [mp.PML(bndWidth,direction=mp.Z)]  # for reflecting or periodic boundary conditions
-# pml_layers = [mp.PML(bndWidth)]
 
 
 ## exploit the mirror symmetry in structure+source: (tilt in e_x direction -> mirror symmetry along y-axis)
-# TODO: rotate initial fields and readout fields to account for rotating polarizer
-## exploit mirror symmetry (instead of others for debugging droplet)
 if use_symmetry:
     symmetries = [mp.Mirror(mp.Y)]
 else:
@@ -268,7 +256,7 @@ else:
 
 
 filename_prefix = f"theta_{tiltTheta:.3f}_phi_{tiltPhi:.3f}_"
-offset = mp.Vector3(0,0,-5)
+offset = mp.Vector3(0,0,-5) # originally (0,0,-5)
 sim = mp.Simulation(
     cell_size=cell,
     boundary_layers=pml_layers,
@@ -282,7 +270,6 @@ sim = mp.Simulation(
     filename_prefix=filename_prefix,
     progress_interval=10,               # print out progress information every 60 s (instead of 4s, to keep logfile clean)
     force_complex_fields=force_complex_fields,
-    #Courant=0.5*0.55,
     ## subpixel averaging options
     eps_averaging=eps_averaging,
     # subpixel_tol=1e-4,           # default: 1e-4
@@ -290,8 +277,8 @@ sim = mp.Simulation(
 )
 sim.use_output_directory(output_dir)
 
-zMeasurePlane = -0.5*cell.z + 2*bndWidth + offset.z
-# dtPlot = 1.0
+
+zMeasurePlane = -3.5000001
 dtPlot = 0.02
 ## custom stepper only takes sim as argument, no custom other arguments
 output_xz_plane = mp.Volume(center=offset, size=mp.Vector3(cell.x, 0.0, cell.z))
@@ -388,8 +375,17 @@ def step_plotCrossSection(sim):         # custom stepper only takes sim as argum
     fig.colorbar(im,cax=cax)
     
     plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, filename_prefix + f'cross_section_Ex_Ey_{t:04d}.png'))
+    if t >= 800:
+        plt.savefig(os.path.join(output_dir, filename_prefix + f'cross_section_Ex_Ey_{t:04d}.png'))
     plt.close()
+
+    lambda_factor = 1000.0
+    wavelength=wvl*lambda_factor
+    numpyDir="numpy%d" % wavelength
+    output_dir_numpy=os.path.join(output_dir,numpyDir)
+    os.makedirs(output_dir_numpy, exist_ok=True)
+    if t >= 800:
+        np.save(os.path.join(output_dir_numpy,filename_prefix+f'cross_section_Ey_{t:04d}'),iy)
 
 
 ## execute simulation run and plot at regular intervals
@@ -404,18 +400,11 @@ sim.run(
     # mp.after_time(tStartIntensityAveraging,mp.in_volume(output_xy_plane, mp.at_every(0.1*periodInMedium,mp.output_efield_x))),   # electric x
     # mp.after_time(tStartIntensityAveraging,mp.in_volume(output_xy_plane, mp.at_every(0.1*periodInMedium,mp.output_efield_y))),   # electric y
     # mp.after_time(tStartIntensityAveraging,mp.in_volume(output_xy_plane, mp.at_every(0.1*periodInMedium,mp.output_dpwr))),       # electric-field density
-    ## 3d e-field for later paraview 3d visualization (TODO: fix name overlap); TODO: create paraview animation of focused light in 3d
     # mp.at_end(mp.output_efield_x),
     # mp.at_end(mp.output_efield_y),
     until=simulationTime
 )
 
-
-## save full output in different directory (and avoid name clash)
-sim.use_output_directory(os.path.join(output_dir,"3d_fields"))
-mp.output_efield_x(sim)
-mp.output_efield_y(sim)
-# later: run h5tovtk output.h5
 
 
 
@@ -427,7 +416,3 @@ mp.output_efield_y(sim)
 #     if mp.am_master(): 
 #       plt.savefig(os.path.join(output_dir, filename_prefix + 'full_Ey.png'))
 #     plt.close()
-    
-    ## TODO: load h5 files from end
-    
-    ## TODO: average h5 files over one period

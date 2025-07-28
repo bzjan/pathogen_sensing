@@ -109,8 +109,8 @@ tic
 % Save a cellular matrix containing values of theta and phi (to be
 % referenced later)
 thetaPhiMasks = {}; % Matrix containing theta and phi values
-thetaRes = 90; % Number of theta values
-phiRes = 40; % Number of phi values
+thetaRes = 120; % Number of theta values
+phiRes = 120; % Number of phi values
 thetaVals = linspace(0,pi/2,thetaRes);
 phiVals = linspace(0,2*pi,phiRes);
 for i = 1:thetaRes
@@ -220,6 +220,8 @@ if makeMovie
     close(v);
 end
 
+save angleVals.mat
+
 time = toc;
 fprintf("Time to track droplet orientation: %.1f s\n",time);
 
@@ -257,7 +259,7 @@ function mask = generateMask(theta,phi,rDrop,rBright)
 % mask - mask of the droplet based on corresponding theta and phi [NxN]
     
     if nargin < 4
-        rBright = 5;
+        rBright = 4;
     end
     if nargin < 3
         rDrop = 10;

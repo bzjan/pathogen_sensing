@@ -1,138 +1,229 @@
-% Hannah Feldstein, Jan Totz, March 2023
-% This program plots the loss function between theoretical and measured
-% velocity of a droplet as a function of different friction values.
+% Hannah Feldstein, Jan Totz
+% This script plots the loss function between theoretical and measured
+% polar angle velocity of a droplet as a function of different friction 
+% values.
 
-% Load angleVals (output from trackMovieMaker.m), cell matrix containing
-% angular position as a function of time.
+% Load angle values
+load('angleVals.mat')
 
-%%
-u0List = 4e-6:4e-6:16e-6; % Velocities to test
-muCorrectionList = 0.02:0.02:0.8; % Friction correction factors to test
+% Choose certain plots (1=yes,0=no)
+plotIndividual=1; % Plot individual loss functions
+plotDropVelocity=0; % Plot droplet velocity
+smoothAngles = 0; % Apply a smoothing function to angles
+plotAngles=0; % Plot angles for each droplet
+sfactor = 5; % Smoothing factor, default value in MATLAB is 5
+figC=0;
 
-dropCount = 1;
+u0List = 6e-6:4e-6:18e-6; % Swimming speed values to test [m/s]
+muCorrectionList = 0.02:0.02:4; % Friction correction factors to test
+
 % Develop color legend
+colorCount = 1; % Counter for plot color
+dropCount = 1;
 for i = 1:length(u0List)
     colorGrad(i,:) = [(i-1)/length(u0List) 0 (length(u0List)-i)/length(u0List)];
 end
 
-dropsToRead = [1 2 3 4  5 6 7 9 10 11 14 15 16 19 20 22 23 24 26 28 31 32];
+% Only read droplets with a long enough time signal
+dropsToRead = [];
+ii = 1;
+for i = 1:length(angleVals)
+    if length(angleVals{i}) > 2000
+        dropsToRead(ii) = i;
+        ii=ii+1;
+    end
+end
+
 for dropNum = dropsToRead
-    figure
+    fprintf('dropNum = %.2e\n\n',dropNum)
+    % figure
     colorCount = 0;
+    % Run this code on each of the droplets in question, i.e. through all cells
+    % of the angleVals cell matrix
     thisDrop = angleVals{dropNum};
     for u0 = u0List
-        count = 0; % Initialize counter for plotting different speeds
-        for muVar = muCorrectionList
-            mu = muVar*7.82885e-8;   % Friction coefficient [kg m / s]
+        count = 0; % initialize counter for plotting different speeds
+        clear F_grav FswimTheta FswimPhi vTheta vPhi vThetaTheory vPhiTheory
+        for muTest = muCorrectionList
+            % Testing parameters
+            mu = muTest*7.82885e-8;   % friction coefficient in kg / s
             m = 2.20e-13; % in kg
             g = 9.81;   % in m/s^2
             rCM = 2.30e-7; % CoM in m
-            
-            framerate = 30;         % [1 / s]
-            rdroplet = 3.5e-6;         % Radius of the droplet [m]
+
+            % Main script
+            framerate = 30;         % in Hz
+            rdroplet = 3.5e-6;         % Radius of the droplet in m
             fm = 1:length(thisDrop);
-            time = fm/framerate; % [s]
+            time = fm/framerate; % Time in seconds
+            tTot = length(time)-1;
             
             % Calculate parameters for each framerate
-            theta = thisDrop(:,1);
-            phi = thisDrop(:,2);
-            
-            % Calculate the distance that the bacteria travels, dr
-            dr = zeros(1,length(time)-1);
-            for i = 1:(length(time)-1)
-                dAngle = acos( cos(theta(i))*cos(theta(i+1)) + ...
-                sin(theta(i))*sin(theta(i+1))*cos(phi(i+1)-phi(i)) );
-                dr(i) = dAngle*rdroplet; % [m]
-                dr_velocity(i) = dr(i)/(time(2)-time(1)); % [m / s]
+            thetaRaw = thisDrop(:,1);
+            phiRaw = thisDrop(:,2);
+            phiRaw = unwrap(phiRaw);
+            if smoothAngles
+                theta=smooth(thetaRaw,sfactor);
+                phi=smooth(phiRaw,sfactor);
+            else
+                theta=thetaRaw;
+                phi=phiRaw;
             end
-            
-            % Calculation of eu, a unit vector that indicates the 
-            % direction of the bacterium.
-            % Find x,y,z at a given point in time. x and y are given
-            % by x_psf and y_psf, respectively:
-            x_exp = -rdroplet.*sin(theta).*sin(phi);
-            y_exp = rdroplet.*sin(theta).*cos(phi);
-            z_exp = rdroplet*cos(theta);
 
-            % For each timestep, find the difference in x,y,z
-            dxyz = zeros(length(time)-1,3);
-            for i = 1:(length(time)-1)
-                dxyz(i,1) = x_exp(i+1)-x_exp(i); % in meters
-                dxyz(i,2) = y_exp(i+1)-y_exp(i);
-                dxyz(i,3) = z_exp(i+1)-z_exp(i);
-            end
-            
-            % Projection and normalization
-            for i = 1:(length(time)-1)
-                eu_notnorm(i,:) = sphereProjector(theta(i,:),phi(i,:)) * dxyz(i,:)';
-                if norm(eu_notnorm(i,:)) ~= 0
-                    eu(i,:) = eu_notnorm(i,:)/norm(eu_notnorm(i,:)); % this line causes trouble, hence the if statement
-                else
-                    eu(i,:) = eu_notnorm(i,:);
-                end
-            end
-            
+            % Calculate Fgrav
+            F_grav = transpose(m*g*rCM/(rdroplet.^2)*sin(theta));
+
             % Calculate Fswim
             muActive = 8.39e-9; % kg m / s
-            Fswim = muActive*u0*eu;
-            
-            % Calculate Fgrav
-            a = zeros(length(time)-1,2);
-            b = ones(length(time)-1,1);
-            F_grav = m*g*rCM/rdroplet*cat(2,a,b);
-            
-            % Calculate v for a given mu value --> output is a matrix of v for each
-            % timestep
-            for i = 1:(length(time)-1)
-                v(i,:) = (1 / mu) * (sphereProjector(theta(i),phi(i)) * transpose( Fswim(i,:)+F_grav(i,:) ) );
+            vCounterFg = 0;
+            for i=1:tTot
+                % Calculate the change in polar and azimuthal angles
+                dTheta(i) = theta(i+1)-theta(i); dPhi(i) = phi(i+1)-phi(i);
+    
+                % Calculate the angular velocities
+                vTheta(i) = dTheta(i)/(time(2)-time(1)); vPhi(i) = dPhi(i)/(time(2)-time(1));
+
+                if vPhi(i) == 0 % If both are 0, the bacteria is still swimming in the theta direction to counter Fg
+                    FswimTheta(i) = muActive*u0/rdroplet;
+                    FswimPhi(i) = 0;
+                else % case where neither = 0
+                    vCounterFg = F_grav(i)/muActive; % swimming velocity that counters F_grav
+                    omega = atan(vPhi(i)/(vTheta(i)+vCounterFg)); % angle that describes relative theta and phi velocities
+                    FswimTheta(i) = muActive*u0/rdroplet*cos(omega);
+                    FswimPhi(i) = muActive*u0/rdroplet*sin(omega);
+                end
+
+                % Correct the sign to correspond to direction
+                FswimTheta(i)=abs(FswimTheta(i))*sign(vTheta(i)+vCounterFg);
+                FswimPhi(i)=abs(FswimPhi(i))*sign(vPhi(i));
             end
+
             
-            % Calculate the magnitude of velocity
-            for i = 1:(length(time)-1)
-                v_mag(i) = sqrt( v(i,1)^2 + v(i,2)^2 + v(i,3)^2 );
-            end
+            % Calculate v for a given friction (mu) value
+            % Calculate v for this given timestep
+            vThetaTheory = (1/mu) * (FswimTheta - F_grav(1:(end-1)));
+            vPhiTheory = (1/mu) * FswimPhi;
             
             % Calculate loss function
-            lossFunction = 0;
-            for i = 1:length(time)-1
-                lossFunction = lossFunction + (v_mag(i)-dr_velocity(i)).^2;
+            lossFunctionTheta = 0;
+            lossFunctionPhi = 0;
+            for i = 1:tTot
+                lossFunctionTheta = lossFunctionTheta + (vTheta(i)-vThetaTheory(i)).^2;
+                lossFunctionPhi = lossFunctionPhi + (vPhi(i)-vPhiTheory(i)).^2;
             end
     
             % Update counter and save
             count = count + 1;
-            loss(count) = lossFunction;
+            lossTheta(count) = lossFunctionTheta;
+            lossPhi(count) = lossFunctionPhi;
         end
-        
-        colorCount = colorCount + 1;
-        [mini, ind] = min(loss); % Minimum, and index of the minimum value in muVar
-        minLoss(colorCount) = muCorrectionList(ind); % The corresponding mu fudge factor for this velocity in question
-        semilogy(muCorrectionList,loss,'LineWidth',1,Color=colorGrad(colorCount,:))
-        hold on
-        xlabel('mu correction factor []','FontSize',16)
-        ylabel('loss','FontSize',16)
-        title('loss gradient for friction interpolation','FontSize',20)
-        
+
+            colorCount = colorCount + 1;
+            [miniTheta, indTheta] = min(lossTheta); % Minimum, and index of the minimum value in mu list
+            [miniPhi, indPhi] = min(lossPhi); % Minimum, and index of the minimum value in mu list
+            minLossTheta(colorCount) = muCorrectionList(indTheta); % The corresponding mu correction factor for this velocity in question
+            minLossPhi(colorCount) = muCorrectionList(indPhi);
+        if plotIndividual
+            if u0==min(u0List)
+                figure
+            end
+            % semilogy(muCorrectionList,lossTheta,'LineWidth',1,Color=colorGrad(colorCount,:))
+            semilogy(muCorrectionList,lossTheta,'LineWidth',2)
+            hold on
+            xlabel('mu correction factor []','FontSize',16)
+            ylabel('loss','FontSize',16)
+            title('loss gradient for theta friction interpolation','FontSize',20)
+        end
     end
     
     % Form the legend labels
     for i = 1:length(u0List)
         u0ListChar{i} = [num2str(10^6*u0List(i)) , ' microns/s'];
     end
-    
     legend(u0ListChar, 'FontSize',14)
-    %hold off
-    
+
     for k = 1:length(u0List)
-        minLossSave{k}(dropCount) = minLoss(k);
+        minLossSaveTheta{k}(dropCount) = minLossTheta(k);
+        minLossSavePhi{k}(dropCount) = minLossPhi(k);
     end
     dropCount = dropCount + 1;
+
+
+% Plot the x,y,z, components of drop velocity as a function of time
+if plotDropVelocity
+    figure
+    subplot(3,1,1)
+        plot(time(1:end-1),v(:,1))
+    subplot(3,1,2)
+        plot(time(1:end-1),v(:,2))
+    subplot(3,1,3)
+        plot(time(1:end-1),v(:,3))
 end
 
-function p = sphereProjector(theta,phi)
-    p = [cos(theta).^2+sin(theta).^2.*sin(phi).^2, ...
-        -cos(phi).*sin(theta).^2.*sin(phi), -cos(theta).*cos(phi).*sin(theta)
-    -cos(phi).*sin(theta).^2.*sin(phi), ...
-    cos(theta).^2+cos(phi).^2.*sin(theta).^2, -cos(theta).*sin(theta).*sin(phi)
-    -cos(theta).*cos(phi).*sin(theta),...
-    -cos(theta).*sin(theta).*sin(phi), -cos(theta).*sin(theta).*sin(phi)];
+% Plot the theta and phi to observe the effect of smoothing
+
+if plotAngles
+    figC=figC+1;
+    figure(figC)
+    
+    subplot(2,1,1)
+        hold on
+        plot(time,thetaRaw,'r')
+        plot(time,theta,'b')
+        xlabel('time (s)')
+        ylabel('polar angle (rads)')
+        hold off
+    subplot(2,1,2)
+        hold on
+        plot(time,phiRaw,'r')
+        plot(time,phi,'b')
+        xlabel('time (s)')
+        ylabel('azimuthal angle (rads)')
+        hold off
 end
+
+
+end
+
+
+
+%% plot individual curves theta
+A = minLossSaveTheta{1};
+B = minLossSaveTheta{2};
+C = minLossSaveTheta{3};
+D = minLossSaveTheta{4};
+
+n = 10;
+
+h = histfit(A,n,'kernel');
+set(gcf,'Visible','off')
+CurveXA = h(2).XData;
+CurveYA = h(2).YData;
+
+h = histfit(B,n,'kernel');
+set(gcf,'Visible','off')
+CurveXB = h(2).XData;
+CurveYB = h(2).YData;
+
+h = histfit(C,n,'kernel');
+set(gcf,'Visible','off')
+CurveXC = h(2).XData;
+CurveYC = h(2).YData;
+
+h = histfit(D,n,'kernel');
+set(gcf,'Visible','off')
+CurveXD = h(2).XData;
+CurveYD = h(2).YData;
+
+figure(61)
+hold on
+plot(CurveXA,CurveYA,'LineWidth',2)
+plot(CurveXB,CurveYB,'LineWidth',2)
+plot(CurveXC,CurveYC,'LineWidth',2)
+plot(CurveXD,CurveYD,'LineWidth',2)
+legend(u0ListChar,'FontSize',16)
+xlabel('correction factor','FontSize',12)
+ylabel('occurance','FontSize',12)
+title('Polar (theta)','FontSize',18)
+box on
+hold off
