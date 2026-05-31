@@ -1,4 +1,5 @@
 # Pathogen Sensing Project
+[![DOI](https://zenodo.org/badge/742197007.svg)](https://doi.org/10.5281/zenodo.20476642)
 
 This is the companion repository for the paper "Shedding light on bacterial fitness in a tug-of-war with liquid crystal emulsions" containing simulation, analysis, and visualization code.
 
